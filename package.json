@@ -12,10 +12,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node -e \"console.log('Task 1 bootstrap: E2E coverage is deferred until a later task.')\"",
-    "db:push": "node -e \"console.log('Task 1 bootstrap: database push is deferred until a later task.')\"",
-    "db:seed": "node -e \"console.log('Task 1 bootstrap: database seed is deferred until a later task.')\""
+    "db:generate": "prisma generate",
+    "db:push": "tsx scripts/run-task3-prisma.ts db push --schema prisma/schema.prisma",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.0",
     "next": "^15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -31,7 +33,9 @@
     "autoprefixer": "^10.4.20",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
+    "prisma": "^6.19.0",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.3",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }
