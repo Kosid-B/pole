@@ -11,6 +11,8 @@ export interface ProjectAreaSummary {
 
 export interface TeamSummary {
   id: string;
+  projectId: string;
+  projectName: string;
   name: string;
   leaderName: string;
   crewSize: number;
