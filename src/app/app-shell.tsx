@@ -6,8 +6,8 @@ type AppShellProps = {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8">
-      <header className="rounded-3xl border border-white/10 bg-white/5 px-6 py-5 shadow-2xl shadow-slate-950/30 backdrop-blur">
+    <div className="flex min-h-screen w-full flex-col px-4 py-6 sm:px-6 sm:py-8">
+      <header className="mx-auto w-full max-w-6xl rounded-3xl border border-white/10 bg-white/5 px-6 py-5 shadow-2xl shadow-slate-950/30 backdrop-blur">
         <p className="text-xs uppercase tracking-[0.3em] text-sky-200/80">
           SaaS shell
         </p>
@@ -15,7 +15,7 @@ export function AppShell({ children }: AppShellProps) {
           Project Command Center
         </h1>
       </header>
-      <main className="flex-1 py-6">{children}</main>
+      <div className="flex-1 py-6">{children}</div>
     </div>
   );
 }
