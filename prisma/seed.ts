@@ -4,6 +4,7 @@ import { createPrismaClient } from "../src/lib/db";
 const prisma = createPrismaClient();
 
 async function main() {
+  await prisma.importJob.deleteMany();
   await prisma.costEntry.deleteMany();
   await prisma.billingRecord.deleteMany();
   await prisma.fieldReportEquipment.deleteMany();

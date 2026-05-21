@@ -1,5 +1,8 @@
 export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED";
 export type FinanceValueType = "ESTIMATED" | "ACTUAL";
+export type ImportSourceType = "SPREADSHEET" | "PDF";
+export type UploadedByRole = "EXECUTIVE" | "ADMIN" | "FIELD_LEADER";
+export type ImportJobStatus = "NEEDS_REVIEW" | "APPROVED" | "REJECTED";
 
 export interface ProjectAreaSummary {
   id: string;
@@ -63,6 +66,15 @@ export interface CostEntrySummary {
   amount: number;
   entryDate: Date;
   valueType: FinanceValueType;
+}
+
+export interface ImportJobSummary {
+  id: string;
+  fileName: string;
+  sourceType: ImportSourceType;
+  uploadedByRole: UploadedByRole;
+  status: ImportJobStatus;
+  createdAt: Date;
 }
 
 export interface ProjectSummary {

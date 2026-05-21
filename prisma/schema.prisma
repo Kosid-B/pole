@@ -19,6 +19,23 @@ enum FinanceValueType {
   ACTUAL
 }
 
+enum ImportSourceType {
+  SPREADSHEET
+  PDF
+}
+
+enum UploadedByRole {
+  EXECUTIVE
+  ADMIN
+  FIELD_LEADER
+}
+
+enum ImportJobStatus {
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+}
+
 model Project {
   id            String         @id @default(cuid())
   name          String
@@ -148,4 +165,17 @@ model CostEntry {
   @@index([projectId])
   @@index([entryDate])
   @@index([valueType])
+}
+
+model ImportJob {
+  id             String          @id @default(cuid())
+  fileName       String
+  sourceType     ImportSourceType
+  uploadedByRole UploadedByRole
+  status         ImportJobStatus @default(NEEDS_REVIEW)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status])
+  @@index([sourceType])
 }
