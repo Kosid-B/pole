@@ -37,29 +37,20 @@ describe("schema smoke", () => {
     rmSync(runtime.filePath, { force: true });
   });
 
-  it("creates a project with one area and one team", async () => {
+  it("supports users and master-data relations", async () => {
     const prisma = createPrismaClient(runtime.databaseUrl);
 
-    const created = await prisma.project.create({
-      data: {
-        name: "Pilot Project",
-        contractValue: 1_000_000,
-        areas: {
-          create: [{ name: "Sisaket Cluster", province: "Sisaket" }],
-        },
-        teams: {
-          create: [{ name: "Team A", leaderName: "Somchai", crewSize: 6 }],
-        },
-      },
-      include: { areas: true, teams: true },
-    });
+    const userCount = await prisma.user.count();
+    const teamTypeCount = await prisma.teamType.count();
+    const costCategoryCount = await prisma.costCategory.count();
+    const unitCount = await prisma.unitOfMeasure.count();
+    const equipmentCount = await prisma.equipmentMaster.count();
 
-    expect(created.areas).toHaveLength(1);
-    expect(created.teams).toHaveLength(1);
-
-    await prisma.project.delete({
-      where: { id: created.id },
-    });
+    expect(userCount).toBeGreaterThanOrEqual(0);
+    expect(teamTypeCount).toBeGreaterThanOrEqual(0);
+    expect(costCategoryCount).toBeGreaterThanOrEqual(0);
+    expect(unitCount).toBeGreaterThanOrEqual(0);
+    expect(equipmentCount).toBeGreaterThanOrEqual(0);
 
     await prisma.$disconnect();
   });

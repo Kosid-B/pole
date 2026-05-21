@@ -4,6 +4,40 @@ export type ImportSourceType = "SPREADSHEET" | "PDF";
 export type UploadedByRole = "EXECUTIVE" | "ADMIN" | "FIELD_LEADER";
 export type ImportJobStatus = "NEEDS_REVIEW" | "APPROVED" | "REJECTED";
 
+export interface UserSummary {
+  id: string;
+  fullName: string;
+  email: string;
+  role: UploadedByRole;
+  isActive: boolean;
+}
+
+export interface TeamTypeSummary {
+  id: string;
+  code: string;
+  nameTh: string;
+}
+
+export interface CostCategorySummary {
+  id: string;
+  code: string;
+  nameTh: string;
+}
+
+export interface UnitOfMeasureSummary {
+  id: string;
+  code: string;
+  nameTh: string;
+  symbol: string;
+}
+
+export interface EquipmentMasterSummary {
+  id: string;
+  code: string;
+  nameTh: string;
+  defaultUnitId: string;
+}
+
 export interface ProjectAreaSummary {
   id: string;
   name: string;
@@ -17,6 +51,8 @@ export interface TeamSummary {
   id: string;
   projectId: string;
   projectName: string;
+  teamTypeId?: string | null;
+  teamType?: TeamTypeSummary | null;
   name: string;
   leaderName: string;
   crewSize: number;
@@ -28,6 +64,10 @@ export interface FieldReportLineItemSummary {
   name: string;
   quantity: number;
   unit: string;
+  unitId?: string | null;
+  unitRef?: UnitOfMeasureSummary | null;
+  equipmentMasterId?: string | null;
+  equipmentMaster?: EquipmentMasterSummary | null;
 }
 
 export interface FieldReportSummary {
@@ -62,6 +102,8 @@ export interface CostEntrySummary {
   projectId: string;
   projectName: string;
   category: string;
+  costCategoryId?: string | null;
+  costCategory?: CostCategorySummary | null;
   description: string;
   amount: number;
   entryDate: Date;

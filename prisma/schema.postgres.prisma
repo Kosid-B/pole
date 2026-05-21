@@ -36,6 +36,35 @@ enum ImportJobStatus {
   REJECTED
 }
 
+model User {
+  id           String         @id @default(cuid())
+  fullName     String
+  email        String         @unique
+  passwordHash String
+  role         UploadedByRole
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model TeamType {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  nameTh    String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  teams     Team[]
+}
+
+model CostCategory {
+  id        String      @id @default(cuid())
+  code      String      @unique
+  nameTh    String
+  sortOrder Int         @default(0)
+  isActive  Boolean     @default(true)
+  entries   CostEntry[]
+}
+
 model Project {
   id             String          @id @default(cuid())
   name           String
@@ -75,6 +104,7 @@ model ProjectArea {
 model Team {
   id             String        @id @default(cuid())
   projectId      String
+  teamTypeId     String?
   name           String
   leaderName     String
   crewSize       Int
@@ -82,9 +112,11 @@ model Team {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  teamType       TeamType?     @relation(fields: [teamTypeId], references: [id], onDelete: Restrict)
   fieldReports   FieldReport[]
 
   @@index([projectId])
+  @@index([teamTypeId])
 }
 
 model FieldReport {
@@ -113,25 +145,62 @@ model FieldReport {
 model FieldReportMaterial {
   id            String      @id @default(cuid())
   fieldReportId String
+  unitId        String?
   name          String
   quantity      Int
   unit          String
   createdAt     DateTime    @default(now())
   fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
+  unitRef       UnitOfMeasure? @relation(fields: [unitId], references: [id], onDelete: Restrict)
 
   @@index([fieldReportId])
+  @@index([unitId])
 }
 
 model FieldReportEquipment {
   id            String      @id @default(cuid())
   fieldReportId String
+  equipmentMasterId String?
+  unitId        String?
   name          String
   quantity      Int
   unit          String
   createdAt     DateTime    @default(now())
   fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
+  equipmentMaster EquipmentMaster? @relation(fields: [equipmentMasterId], references: [id], onDelete: Restrict)
+  unitRef       UnitOfMeasure? @relation(fields: [unitId], references: [id], onDelete: Restrict)
 
   @@index([fieldReportId])
+  @@index([equipmentMasterId])
+  @@index([unitId])
+}
+
+model UnitOfMeasure {
+  id             String                 @id @default(cuid())
+  code           String                 @unique
+  nameTh         String
+  symbol         String
+  isActive       Boolean                @default(true)
+  sortOrder      Int                    @default(0)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  materials      FieldReportMaterial[]
+  equipmentLines FieldReportEquipment[]
+  equipment      EquipmentMaster[]
+}
+
+model EquipmentMaster {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  nameTh        String
+  defaultUnitId String
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  defaultUnit   UnitOfMeasure @relation(fields: [defaultUnitId], references: [id], onDelete: Restrict)
+  equipmentLines FieldReportEquipment[]
+
+  @@index([defaultUnitId])
 }
 
 model BillingRecord {
@@ -153,6 +222,7 @@ model BillingRecord {
 model CostEntry {
   id          String           @id @default(cuid())
   projectId   String
+  costCategoryId String?
   category    String
   description String
   amount      Decimal
@@ -161,8 +231,10 @@ model CostEntry {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  costCategory CostCategory?   @relation(fields: [costCategoryId], references: [id], onDelete: Restrict)
 
   @@index([projectId])
+  @@index([costCategoryId])
   @@index([entryDate])
   @@index([valueType])
 }
