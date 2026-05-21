@@ -60,21 +60,15 @@ const developmentUsers = [
 
 const productionUsers = [
   {
-    fullName: "Executive User",
-    email: "executive@example.com",
+    fullName: "โฆษิต แก้วเต่า",
+    email: "support@b-tctraining.com",
     role: "EXECUTIVE" as const,
     isActive: true,
   },
   {
-    fullName: "Admin User",
-    email: "admin@example.com",
+    fullName: "โฆษิต แก้วเต่า",
+    email: "keawtao2520@gmail.com",
     role: "ADMIN" as const,
-    isActive: true,
-  },
-  {
-    fullName: "Field User",
-    email: "field@example.com",
-    role: "FIELD_LEADER" as const,
     isActive: true,
   },
 ];
