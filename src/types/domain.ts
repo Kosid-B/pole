@@ -1,4 +1,5 @@
 export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED";
+export type FinanceValueType = "ESTIMATED" | "ACTUAL";
 
 export interface ProjectAreaSummary {
   id: string;
@@ -40,6 +41,28 @@ export interface FieldReportSummary {
   issues: string | null;
   materials: FieldReportLineItemSummary[];
   equipment: FieldReportLineItemSummary[];
+}
+
+export interface BillingRecordSummary {
+  id: string;
+  projectId: string;
+  projectName: string;
+  workPackage: string;
+  billedValue: number;
+  billingDate: Date;
+  expectedPaymentDate: Date;
+  isDocumentComplete: boolean;
+}
+
+export interface CostEntrySummary {
+  id: string;
+  projectId: string;
+  projectName: string;
+  category: string;
+  description: string;
+  amount: number;
+  entryDate: Date;
+  valueType: FinanceValueType;
 }
 
 export interface ProjectSummary {

@@ -14,6 +14,11 @@ enum ProjectStatus {
   COMPLETED
 }
 
+enum FinanceValueType {
+  ESTIMATED
+  ACTUAL
+}
+
 model Project {
   id            String         @id @default(cuid())
   name          String
@@ -26,6 +31,8 @@ model Project {
   areas         ProjectArea[]
   teams         Team[]
   fieldReports  FieldReport[]
+  billingRecords BillingRecord[]
+  costEntries   CostEntry[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -108,4 +115,37 @@ model FieldReportEquipment {
   fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
 
   @@index([fieldReportId])
+}
+
+model BillingRecord {
+  id                  String   @id @default(cuid())
+  projectId           String
+  workPackage         String
+  billedValue         Decimal
+  billingDate         DateTime
+  expectedPaymentDate DateTime
+  isDocumentComplete  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([billingDate])
+}
+
+model CostEntry {
+  id          String           @id @default(cuid())
+  projectId   String
+  category    String
+  description String
+  amount      Decimal
+  entryDate   DateTime
+  valueType   FinanceValueType
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([entryDate])
+  @@index([valueType])
 }
