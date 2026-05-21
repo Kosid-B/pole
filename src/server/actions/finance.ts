@@ -27,7 +27,7 @@ function parseBillingRecordFormData(formData: FormData): CreateBillingRecordInpu
 function parseCostEntryFormData(formData: FormData): CreateCostEntryInput {
   return createCostEntrySchema.parse({
     projectId: formData.get("projectId"),
-    category: formData.get("category"),
+    costCategoryId: formData.get("costCategoryId"),
     description: formData.get("description"),
     amount: formData.get("amount"),
     entryDate: formData.get("entryDate"),
@@ -73,10 +73,17 @@ export async function createCostEntry(
   const prisma = databaseUrl ? createPrismaClient(databaseUrl) : db;
 
   try {
+    const category = await prisma.costCategory.findUniqueOrThrow({
+      where: {
+        id: data.costCategoryId,
+      },
+    });
+
     const costEntry = await prisma.costEntry.create({
       data: {
         projectId: data.projectId,
-        category: data.category,
+        costCategoryId: data.costCategoryId,
+        category: category.nameTh,
         description: data.description,
         amount: data.amount,
         entryDate: data.entryDate,
@@ -84,6 +91,7 @@ export async function createCostEntry(
       },
       include: {
         project: true,
+        costCategory: true,
       },
     });
 

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -66,53 +66,53 @@ model CostCategory {
 }
 
 model Project {
-  id            String         @id @default(cuid())
-  name          String
-  customerName  String?
-  contractValue Decimal
-  startDate     DateTime?
-  endDate       DateTime?
-  targetUnits   Int            @default(0)
-  status        ProjectStatus  @default(PLANNING)
-  areas         ProjectArea[]
-  teams         Team[]
-  fieldReports  FieldReport[]
+  id             String          @id @default(cuid())
+  name           String
+  customerName   String?
+  contractValue  Decimal
+  startDate      DateTime?
+  endDate        DateTime?
+  targetUnits    Int             @default(0)
+  status         ProjectStatus   @default(PLANNING)
+  areas          ProjectArea[]
+  teams          Team[]
+  fieldReports   FieldReport[]
   billingRecords BillingRecord[]
-  costEntries   CostEntry[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  costEntries    CostEntry[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([status])
 }
 
 model ProjectArea {
-  id          String   @id @default(cuid())
-  projectId   String
-  name        String
-  province    String
-  district    String?
-  cluster     String?
-  targetUnits Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id           String        @id @default(cuid())
+  projectId    String
+  name         String
+  province     String
+  district     String?
+  cluster      String?
+  targetUnits  Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   fieldReports FieldReport[]
 
   @@index([projectId])
 }
 
 model Team {
-  id             String   @id @default(cuid())
+  id             String        @id @default(cuid())
   projectId      String
   teamTypeId     String?
   name           String
   leaderName     String
   crewSize       Int
   specialization String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  teamType       TeamType? @relation(fields: [teamTypeId], references: [id], onDelete: Restrict)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  teamType       TeamType?     @relation(fields: [teamTypeId], references: [id], onDelete: Restrict)
   fieldReports   FieldReport[]
 
   @@index([projectId])
@@ -176,17 +176,17 @@ model FieldReportEquipment {
 }
 
 model UnitOfMeasure {
-  id          String            @id @default(cuid())
-  code        String            @unique
-  nameTh      String
-  symbol      String
-  isActive    Boolean           @default(true)
-  sortOrder   Int               @default(0)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  materials   FieldReportMaterial[]
+  id             String                 @id @default(cuid())
+  code           String                 @unique
+  nameTh         String
+  symbol         String
+  isActive       Boolean                @default(true)
+  sortOrder      Int                    @default(0)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  materials      FieldReportMaterial[]
   equipmentLines FieldReportEquipment[]
-  equipment   EquipmentMaster[]
+  equipment      EquipmentMaster[]
 }
 
 model EquipmentMaster {

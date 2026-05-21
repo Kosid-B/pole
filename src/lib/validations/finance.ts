@@ -13,7 +13,7 @@ export const createBillingRecordSchema = z.object({
 
 export const createCostEntrySchema = z.object({
   projectId: z.string().trim().min(1, "Project is required."),
-  category: z.string().trim().min(1, "Category is required."),
+  costCategoryId: z.string().trim().min(1, "Cost category is required."),
   description: z.string().trim().min(1, "Description is required."),
   amount: z.coerce.number().positive("Amount must be greater than zero."),
   entryDate: z.coerce.date(),
