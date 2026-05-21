@@ -1,9 +1,10 @@
-import type { PrismaClient, Project, Team } from "@prisma/client";
+import type { PrismaClient, Project, Team, TeamType } from "@prisma/client";
 import { db, createPrismaClient } from "@/lib/db";
-import type { TeamSummary } from "@/types/domain";
+import type { TeamSummary, TeamTypeSummary } from "@/types/domain";
 
 type TeamWithProject = Team & {
   project: Project;
+  teamType: TeamType | null;
 };
 
 function toTeamSummary(team: TeamWithProject): TeamSummary {
@@ -11,6 +12,14 @@ function toTeamSummary(team: TeamWithProject): TeamSummary {
     id: team.id,
     projectId: team.projectId,
     projectName: team.project.name,
+    teamTypeId: team.teamTypeId,
+    teamType: team.teamType
+      ? {
+          id: team.teamType.id,
+          code: team.teamType.code,
+          nameTh: team.teamType.nameTh,
+        }
+      : null,
     name: team.name,
     leaderName: team.leaderName,
     crewSize: team.crewSize,
@@ -40,6 +49,7 @@ export async function listTeams(databaseUrl?: string) {
     const teams = await client.team.findMany({
       include: {
         project: true,
+        teamType: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -47,6 +57,25 @@ export async function listTeams(databaseUrl?: string) {
     });
 
     return teams.map(toTeamSummary);
+  });
+}
+
+export async function listTeamTypes(databaseUrl?: string): Promise<TeamTypeSummary[]> {
+  return withTeamDb(databaseUrl, async (client) => {
+    const teamTypes = await client.teamType.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        sortOrder: "asc",
+      },
+    });
+
+    return teamTypes.map((teamType) => ({
+      id: teamType.id,
+      code: teamType.code,
+      nameTh: teamType.nameTh,
+    }));
   });
 }
 

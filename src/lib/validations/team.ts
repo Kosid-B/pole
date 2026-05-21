@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createTeamSchema = z.object({
   projectId: z.string().trim().min(1, "Project is required."),
+  teamTypeId: z.string().trim().min(1, "Team type is required."),
   name: z.string().trim().min(1, "Team name is required."),
   leaderName: z.string().trim().min(1, "Leader name is required."),
   crewSize: z.coerce

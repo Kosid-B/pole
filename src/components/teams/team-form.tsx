@@ -1,11 +1,12 @@
-import type { ProjectSummary } from "@/types/domain";
+import type { ProjectSummary, TeamTypeSummary } from "@/types/domain";
 
 type TeamFormProps = {
   action: (formData: FormData) => Promise<void>;
   projects: ProjectSummary[];
+  teamTypes: TeamTypeSummary[];
 };
 
-export function TeamForm({ action, projects }: TeamFormProps) {
+export function TeamForm({ action, projects, teamTypes }: TeamFormProps) {
   return (
     <form action={action} className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-2">
@@ -29,6 +30,31 @@ export function TeamForm({ action, projects }: TeamFormProps) {
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="teamTypeId"
+            className="text-sm font-medium text-slate-200"
+          >
+            Team type
+          </label>
+          <select
+            id="teamTypeId"
+            name="teamTypeId"
+            required
+            defaultValue=""
+            className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/60"
+          >
+            <option value="" disabled>
+              Select a team type
+            </option>
+            {teamTypes.map((teamType) => (
+              <option key={teamType.id} value={teamType.id}>
+                {teamType.nameTh}
               </option>
             ))}
           </select>

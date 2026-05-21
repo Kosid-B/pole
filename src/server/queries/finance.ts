@@ -1,5 +1,6 @@
 import type {
   BillingRecord,
+  CostCategory,
   CostEntry,
   PrismaClient,
   Project,
@@ -7,6 +8,7 @@ import type {
 import { db, createPrismaClient } from "@/lib/db";
 import type {
   BillingRecordSummary,
+  CostCategorySummary,
   CostEntrySummary,
   ProjectSummary,
 } from "@/types/domain";
@@ -18,6 +20,7 @@ type BillingRecordWithProject = BillingRecord & {
 
 type CostEntryWithProject = CostEntry & {
   project: Project;
+  costCategory: CostCategory | null;
 };
 
 function toBillingRecordSummary(
@@ -41,6 +44,14 @@ function toCostEntrySummary(costEntry: CostEntryWithProject): CostEntrySummary {
     projectId: costEntry.projectId,
     projectName: costEntry.project.name,
     category: costEntry.category,
+    costCategoryId: costEntry.costCategoryId,
+    costCategory: costEntry.costCategory
+      ? {
+          id: costEntry.costCategory.id,
+          code: costEntry.costCategory.code,
+          nameTh: costEntry.costCategory.nameTh,
+        }
+      : null,
     description: costEntry.description,
     amount: Number(costEntry.amount),
     entryDate: costEntry.entryDate,
@@ -90,6 +101,7 @@ export async function listCostEntries(databaseUrl?: string) {
     const costEntries = await client.costEntry.findMany({
       include: {
         project: true,
+        costCategory: true,
       },
       orderBy: [
         {
@@ -107,6 +119,27 @@ export async function listCostEntries(databaseUrl?: string) {
 
 export async function getFinanceProjects(databaseUrl?: string): Promise<ProjectSummary[]> {
   return getProjectSummaries(databaseUrl);
+}
+
+export async function listCostCategories(
+  databaseUrl?: string,
+): Promise<CostCategorySummary[]> {
+  return withFinanceDb(databaseUrl, async (client) => {
+    const categories = await client.costCategory.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        sortOrder: "asc",
+      },
+    });
+
+    return categories.map((category) => ({
+      id: category.id,
+      code: category.code,
+      nameTh: category.nameTh,
+    }));
+  });
 }
 
 export { toBillingRecordSummary, toCostEntrySummary };

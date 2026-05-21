@@ -23,13 +23,14 @@ export function FinanceSummaryTable({
 
   return (
     <div className="grid gap-6 xl:grid-cols-2">
-      <section className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-        <div className="border-b border-white/10 bg-slate-950/40 px-4 py-3">
+      <section className="overflow-hidden rounded-[1.75rem] border border-white/8 bg-white/[0.04]">
+        <div className="border-b border-white/8 bg-slate-950/40 px-4 py-3">
           <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-200/70">
             Billing records
           </h3>
         </div>
-        <table className="min-w-full divide-y divide-white/10 text-left text-sm text-slate-200">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-white/8 text-left text-sm text-slate-200">
           <thead className="bg-slate-950/30 text-xs uppercase tracking-[0.2em] text-slate-400">
             <tr>
               <th className="px-4 py-3 font-medium">Project</th>
@@ -60,16 +61,18 @@ export function FinanceSummaryTable({
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
 
-      <section className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-        <div className="border-b border-white/10 bg-slate-950/40 px-4 py-3">
+      <section className="overflow-hidden rounded-[1.75rem] border border-white/8 bg-white/[0.04]">
+        <div className="border-b border-white/8 bg-slate-950/40 px-4 py-3">
           <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-200/70">
             Cost entries
           </h3>
         </div>
-        <table className="min-w-full divide-y divide-white/10 text-left text-sm text-slate-200">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-white/8 text-left text-sm text-slate-200">
           <thead className="bg-slate-950/30 text-xs uppercase tracking-[0.2em] text-slate-400">
             <tr>
               <th className="px-4 py-3 font-medium">Project</th>
@@ -84,7 +87,9 @@ export function FinanceSummaryTable({
                 <td className="px-4 py-4">
                   <div className="space-y-1">
                     <p>{entry.description}</p>
-                    <p className="text-xs text-slate-400">{entry.category}</p>
+                    <p className="text-xs text-slate-400">
+                      {entry.costCategory?.nameTh ?? entry.category}
+                    </p>
                   </div>
                 </td>
                 <td className="px-4 py-4">
@@ -96,7 +101,8 @@ export function FinanceSummaryTable({
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
     </div>
   );
