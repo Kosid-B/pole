@@ -19,6 +19,27 @@ The current baseline includes:
 4. Seed the sample data with `pnpm db:seed`.
 5. Start the app with `pnpm dev`.
 
+## Database workflows
+
+### Local development
+
+1. `pnpm db:generate`
+2. `pnpm db:push`
+3. `pnpm db:seed`
+
+This flow keeps the local Windows-friendly SQLite setup.
+
+### Production
+
+1. Set `DATABASE_URL` to the production PostgreSQL connection string.
+2. Run `pnpm db:generate`
+3. Run `pnpm db:deploy`
+4. Optionally run `pnpm db:seed:prod` only when you are ready to bootstrap
+   live data intentionally.
+
+Production uses `prisma/schema.postgres.prisma` plus checked-in migrations under
+`prisma/migrations/`. Do not use `pnpm db:push` against production.
+
 ## Verification
 
 The strongest routine checks supported by the current baseline are:

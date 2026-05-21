@@ -14,9 +14,12 @@
     "test:e2e": "node playwright.e2e-setup.mjs",
     "test:e2e:ui": "playwright test --ui",
     "playwright:install": "playwright install chromium",
-    "db:generate": "prisma generate",
+    "db:generate": "node scripts/prisma-generate.mjs",
     "db:push": "tsx scripts/run-task3-prisma.ts db push --schema prisma/schema.prisma",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:migrate:dev": "prisma migrate dev --schema prisma/schema.postgres.prisma",
+    "db:deploy": "prisma migrate deploy --schema prisma/schema.postgres.prisma",
+    "db:seed:prod": "tsx prisma/seed.production.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

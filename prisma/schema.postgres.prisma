@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
+enum FinanceValueType {
+  ESTIMATED
+  ACTUAL
+}
+
+enum ImportSourceType {
+  SPREADSHEET
+  PDF
+}
+
+enum UploadedByRole {
+  EXECUTIVE
+  ADMIN
+  FIELD_LEADER
+}
+
+enum ImportJobStatus {
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model Project {
+  id             String          @id @default(cuid())
+  name           String
+  customerName   String?
+  contractValue  Decimal
+  startDate      DateTime?
+  endDate        DateTime?
+  targetUnits    Int             @default(0)
+  status         ProjectStatus   @default(PLANNING)
+  areas          ProjectArea[]
+  teams          Team[]
+  fieldReports   FieldReport[]
+  billingRecords BillingRecord[]
+  costEntries    CostEntry[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status])
+}
+
+model ProjectArea {
+  id           String        @id @default(cuid())
+  projectId    String
+  name         String
+  province     String
+  district     String?
+  cluster      String?
+  targetUnits  Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fieldReports FieldReport[]
+
+  @@index([projectId])
+}
+
+model Team {
+  id             String        @id @default(cuid())
+  projectId      String
+  name           String
+  leaderName     String
+  crewSize       Int
+  specialization String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fieldReports   FieldReport[]
+
+  @@index([projectId])
+}
+
+model FieldReport {
+  id             String                 @id @default(cuid())
+  projectId      String
+  areaId         String
+  teamId         String
+  reportDate     DateTime
+  completedUnits Int                    @default(0)
+  manpowerCount  Int                    @default(0)
+  issues         String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  project        Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  area           ProjectArea            @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  team           Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  materials      FieldReportMaterial[]
+  equipment      FieldReportEquipment[]
+
+  @@index([projectId])
+  @@index([areaId])
+  @@index([teamId])
+  @@index([reportDate])
+}
+
+model FieldReportMaterial {
+  id            String      @id @default(cuid())
+  fieldReportId String
+  name          String
+  quantity      Int
+  unit          String
+  createdAt     DateTime    @default(now())
+  fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
+
+  @@index([fieldReportId])
+}
+
+model FieldReportEquipment {
+  id            String      @id @default(cuid())
+  fieldReportId String
+  name          String
+  quantity      Int
+  unit          String
+  createdAt     DateTime    @default(now())
+  fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
+
+  @@index([fieldReportId])
+}
+
+model BillingRecord {
+  id                  String   @id @default(cuid())
+  projectId           String
+  workPackage         String
+  billedValue         Decimal
+  billingDate         DateTime
+  expectedPaymentDate DateTime
+  isDocumentComplete  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([billingDate])
+}
+
+model CostEntry {
+  id          String           @id @default(cuid())
+  projectId   String
+  category    String
+  description String
+  amount      Decimal
+  entryDate   DateTime
+  valueType   FinanceValueType
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([entryDate])
+  @@index([valueType])
+}
+
+model ImportJob {
+  id             String          @id @default(cuid())
+  fileName       String
+  sourceType     ImportSourceType
+  uploadedByRole UploadedByRole
+  status         ImportJobStatus @default(NEEDS_REVIEW)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status])
+  @@index([sourceType])
+}
