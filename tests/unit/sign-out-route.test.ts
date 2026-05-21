@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
-import { EMAIL_COOKIE_NAME, ROLE_COOKIE_NAME } from "@/lib/auth";
+import {
+  EMAIL_COOKIE_NAME,
+  ROLE_COOKIE_NAME,
+  USER_ID_COOKIE_NAME,
+} from "@/lib/auth";
 import { GET } from "@/app/sign-out/route";
 
 vi.mock("next/headers", () => ({
@@ -21,6 +25,7 @@ describe("GET /sign-out", () => {
 
     const response = await GET(request);
 
+    expect(deleteCookie).toHaveBeenCalledWith(USER_ID_COOKIE_NAME);
     expect(deleteCookie).toHaveBeenCalledWith(ROLE_COOKIE_NAME);
     expect(deleteCookie).toHaveBeenCalledWith(EMAIL_COOKIE_NAME);
     expect(response.status).toBe(307);
