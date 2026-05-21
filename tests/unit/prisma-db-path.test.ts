@@ -72,7 +72,7 @@ describe("Task 3 database path", () => {
     }
   });
 
-  it("fails fast for explicit non-file database urls instead of rewriting them to sqlite", () => {
+  it("keeps explicit non-file database urls for production-ready Prisma clients", () => {
     const originalDatabaseUrl = process.env.DATABASE_URL;
 
     try {
@@ -81,9 +81,19 @@ describe("Task 3 database path", () => {
       expect(() => getTask3DatabaseRuntime()).toThrow(
         "Task 3 only supports SQLite file DATABASE_URL values.",
       );
-      expect(() => createPrismaClient()).toThrow(
-        "Task 3 only supports SQLite file DATABASE_URL values.",
-      );
+
+      const prisma = createPrismaClient();
+      const datasourceUrl = (prisma as unknown as {
+        _engineConfig?: {
+          overrideDatasources?: {
+            db?: {
+              url?: string;
+            };
+          };
+        };
+      })._engineConfig?.overrideDatasources?.db?.url;
+
+      expect(datasourceUrl).toBe("postgresql://user:secret@example.com:5432/task3");
     } finally {
       process.env.DATABASE_URL = originalDatabaseUrl;
     }

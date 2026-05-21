@@ -6,6 +6,16 @@ const globalForPrisma = globalThis as typeof globalThis & {
 };
 
 export function createPrismaClient(databaseUrl = process.env.DATABASE_URL) {
+  if (databaseUrl && !databaseUrl.startsWith("file:")) {
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: databaseUrl,
+        },
+      },
+    });
+  }
+
   const resolvedDatabaseUrl = getTask3DatabaseRuntime({ databaseUrl }).databaseUrl;
 
   if (resolvedDatabaseUrl) {
