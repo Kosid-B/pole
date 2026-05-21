@@ -1,4 +1,3 @@
-import { ProjectStatus } from "@prisma/client";
 import { createPrismaClient } from "../src/lib/db";
 
 const prisma = createPrismaClient();
@@ -22,7 +21,7 @@ async function main() {
       startDate: new Date("2026-01-15"),
       endDate: new Date("2026-12-31"),
       targetUnits: 90000,
-      status: ProjectStatus.ACTIVE,
+      status: "ACTIVE",
       areas: {
         create: [
           {
