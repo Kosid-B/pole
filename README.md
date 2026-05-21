@@ -65,6 +65,42 @@ Then run:
 
 1. `pnpm test:e2e`
 
+## Identity and master data verification
+
+Before merge, confirm the normalized data flow end-to-end:
+
+1. Sign in with seeded database users such as `admin@example.com` or
+   `field@example.com`
+2. Create teams with fixed team types instead of free-text role labels
+3. Create finance entries with fixed cost categories
+4. Create field reports with normalized unit selections and optional equipment
+   suggestions
+5. Verify dashboard summaries still reflect progress, finance, and latest issues
+
+Recommended command sequence:
+
+1. `pnpm db:generate`
+2. `pnpm db:push`
+3. `pnpm db:seed`
+4. `pnpm test`
+5. `pnpm test:e2e`
+6. `pnpm build`
+
+## UX verification
+
+Before merge, verify the following:
+
+1. `pnpm test`
+2. `pnpm test:e2e`
+3. `pnpm build`
+
+Manual review points:
+
+- the dashboard reads as summary first, action second
+- module pages keep short, role-appropriate choices
+- field reporting is comfortable on mobile without precision tapping
+- warnings and critical states use both text and color
+
 ## Notes
 
 - The app uses a shared SQLite setup tailored for this Windows workspace.
