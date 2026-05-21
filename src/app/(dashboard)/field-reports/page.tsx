@@ -3,28 +3,45 @@ import { listFieldReports } from "@/server/queries/field-reports";
 
 export default async function FieldReportsPage() {
   const reports = await listFieldReports();
+  const totalUnits = reports.reduce((sum, report) => sum + report.completedUnits, 0);
+  const totalManpower = reports.reduce((sum, report) => sum + report.manpowerCount, 0);
 
   return (
     <section className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-sky-200/70">
+          <p className="text-xs uppercase tracking-[0.34em] text-cyan-200/70">
             Field reports
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-white">
             Daily field reporting
           </h2>
-          <p className="max-w-2xl text-sm leading-6 text-slate-300">
-            Capture executed units, crew effort, and the first material and
-            equipment usage details for each reporting day.
+          <p className="max-w-3xl text-sm leading-7 text-slate-300">
+            Keep the latest field signal visible, then capture the next shift update from
+            a workflow that stays readable on desktop and mobile.
           </p>
         </div>
         <Link
           href="/field-reports/new"
-          className="inline-flex items-center justify-center rounded-2xl bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
+          className="inline-flex min-h-11 items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
         >
           New field report
         </Link>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-[1.5rem] border border-white/8 bg-white/[0.04] p-4">
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Reports logged</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{reports.length}</p>
+        </div>
+        <div className="rounded-[1.5rem] border border-white/8 bg-white/[0.04] p-4">
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Completed units</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{totalUnits}</p>
+        </div>
+        <div className="rounded-[1.5rem] border border-cyan-300/18 bg-cyan-300/[0.06] p-4">
+          <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/80">Crew effort</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{totalManpower}</p>
+        </div>
       </div>
 
       {reports.length === 0 ? (
@@ -37,7 +54,7 @@ export default async function FieldReportsPage() {
           {reports.map((report) => (
             <article
               key={report.id}
-              className="rounded-[2rem] border border-white/10 bg-white/5 p-5"
+              className="rounded-[1.75rem] border border-white/8 bg-white/[0.04] p-5"
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
@@ -47,7 +64,7 @@ export default async function FieldReportsPage() {
                   <p className="text-sm text-slate-300">
                     {report.areaName} - {report.teamName}
                   </p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-sky-200/70">
+                  <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/70">
                     {report.reportDate.toLocaleDateString()}
                   </p>
                 </div>
@@ -74,7 +91,7 @@ export default async function FieldReportsPage() {
                   <ul className="mt-3 space-y-2 text-sm text-slate-300">
                     {report.materials.map((item) => (
                       <li key={item.id}>
-                        {item.name} - {item.quantity} {item.unit}
+                        {item.name} - {item.quantity} {item.unitRef?.symbol ?? item.unit}
                       </li>
                     ))}
                   </ul>
@@ -85,7 +102,8 @@ export default async function FieldReportsPage() {
                   <ul className="mt-3 space-y-2 text-sm text-slate-300">
                     {report.equipment.map((item) => (
                       <li key={item.id}>
-                        {item.name} - {item.quantity} {item.unit}
+                        {item.equipmentMaster?.nameTh ?? item.name} - {item.quantity}{" "}
+                        {item.unitRef?.symbol ?? item.unit}
                       </li>
                     ))}
                   </ul>

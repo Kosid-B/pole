@@ -1,13 +1,49 @@
 import { z } from "zod";
 
-const lineItemSchema = z.object({
+const materialLineItemSchema = z
+  .object({
   name: z.string().trim().min(1, "Line item name is required."),
   quantity: z.coerce
     .number()
     .int("Quantity must be a whole number.")
     .positive("Quantity must be greater than zero."),
-  unit: z.string().trim().min(1, "Unit is required."),
-});
+    unitId: z.string().trim().optional(),
+    unit: z.string().trim().optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.unitId || value.unit) {
+      return;
+    }
+
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["unitId"],
+      message: "Unit is required.",
+    });
+  });
+
+const equipmentLineItemSchema = z
+  .object({
+    equipmentMasterId: z.string().trim().optional(),
+    name: z.string().trim().min(1, "Line item name is required."),
+    quantity: z.coerce
+      .number()
+      .int("Quantity must be a whole number.")
+      .positive("Quantity must be greater than zero."),
+    unitId: z.string().trim().optional(),
+    unit: z.string().trim().optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.unitId || value.unit) {
+      return;
+    }
+
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["unitId"],
+      message: "Unit is required.",
+    });
+  });
 
 export const createFieldReportSchema = z.object({
   projectId: z.string().trim().min(1, "Project is required."),
@@ -27,8 +63,12 @@ export const createFieldReportSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value || null),
-  materials: z.array(lineItemSchema).min(1, "At least one material line is required."),
-  equipment: z.array(lineItemSchema).min(1, "At least one equipment line is required."),
+  materials: z
+    .array(materialLineItemSchema)
+    .min(1, "At least one material line is required."),
+  equipment: z
+    .array(equipmentLineItemSchema)
+    .min(1, "At least one equipment line is required."),
 });
 
 export type CreateFieldReportInput = z.infer<typeof createFieldReportSchema>;
