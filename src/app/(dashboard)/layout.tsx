@@ -13,11 +13,11 @@ export default async function DashboardLayout({
   const session = await requireSession();
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
+    <div className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-4 lg:flex-row lg:px-6 lg:py-6">
       <AppSidebar session={session} />
       <div className="flex-1 space-y-6">
         <TopBar session={session} />
-        <main className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 text-slate-100 shadow-2xl shadow-slate-950/20 backdrop-blur sm:p-8">
+        <main className="rounded-[2rem] border border-[var(--panel-border)] bg-[var(--panel)] p-5 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.35)] backdrop-blur sm:p-6 lg:p-8">
           {children}
         </main>
       </div>
