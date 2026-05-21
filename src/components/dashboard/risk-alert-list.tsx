@@ -1,4 +1,5 @@
 import type { DashboardAlert } from "@/lib/dashboard/get-dashboard-alerts";
+import { EmptyState } from "@/components/shared/empty-state";
 
 type RiskAlertListProps = {
   alerts: DashboardAlert[];
@@ -22,10 +23,11 @@ export function RiskAlertList({ alerts }: RiskAlertListProps) {
 
       <div className="mt-5 space-y-3">
         {alerts.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-            No active alerts. The current portfolio looks clear from this first
-            dashboard pass.
-          </div>
+          <EmptyState
+            compact
+            title="No active alerts"
+            description="The current portfolio looks clear from this first dashboard pass."
+          />
         ) : (
           alerts.map((alert) => (
             <article
