@@ -30,7 +30,7 @@ test("field leaders are redirected away from finance", async ({ page }) => {
   await expect(page).toHaveURL(/\/field-reports$/);
   await expect(
     page.getByRole("heading", {
-      name: "Field leaders can reach their reporting workspace",
+      name: "Daily field reporting",
     }),
   ).toBeVisible();
 });

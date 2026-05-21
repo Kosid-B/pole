@@ -25,6 +25,7 @@ model Project {
   status        ProjectStatus  @default(PLANNING)
   areas         ProjectArea[]
   teams         Team[]
+  fieldReports  FieldReport[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -42,6 +43,7 @@ model ProjectArea {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fieldReports FieldReport[]
 
   @@index([projectId])
 }
@@ -56,6 +58,54 @@ model Team {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fieldReports   FieldReport[]
 
   @@index([projectId])
+}
+
+model FieldReport {
+  id             String                 @id @default(cuid())
+  projectId      String
+  areaId         String
+  teamId         String
+  reportDate     DateTime
+  completedUnits Int                    @default(0)
+  manpowerCount  Int                    @default(0)
+  issues         String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  project        Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  area           ProjectArea            @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  team           Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  materials      FieldReportMaterial[]
+  equipment      FieldReportEquipment[]
+
+  @@index([projectId])
+  @@index([areaId])
+  @@index([teamId])
+  @@index([reportDate])
+}
+
+model FieldReportMaterial {
+  id            String      @id @default(cuid())
+  fieldReportId String
+  name          String
+  quantity      Int
+  unit          String
+  createdAt     DateTime    @default(now())
+  fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
+
+  @@index([fieldReportId])
+}
+
+model FieldReportEquipment {
+  id            String      @id @default(cuid())
+  fieldReportId String
+  name          String
+  quantity      Int
+  unit          String
+  createdAt     DateTime    @default(now())
+  fieldReport   FieldReport @relation(fields: [fieldReportId], references: [id], onDelete: Cascade)
+
+  @@index([fieldReportId])
 }

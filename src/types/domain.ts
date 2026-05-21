@@ -19,6 +19,29 @@ export interface TeamSummary {
   specialization: string | null;
 }
 
+export interface FieldReportLineItemSummary {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface FieldReportSummary {
+  id: string;
+  projectId: string;
+  projectName: string;
+  areaId: string;
+  areaName: string;
+  teamId: string;
+  teamName: string;
+  reportDate: Date;
+  completedUnits: number;
+  manpowerCount: number;
+  issues: string | null;
+  materials: FieldReportLineItemSummary[];
+  equipment: FieldReportLineItemSummary[];
+}
+
 export interface ProjectSummary {
   id: string;
   name: string;

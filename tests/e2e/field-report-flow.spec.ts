@@ -1,0 +1,39 @@
+import { expect, test } from "@playwright/test";
+
+test("field leader can create a field report with material and equipment usage", async ({
+  page,
+}) => {
+  await page.goto("/sign-in?redirectTo=/field-reports/new");
+
+  await page.getByLabel("Email").fill("field@example.com");
+  await page.getByLabel("Password").fill("password");
+  await page.getByLabel("Role").selectOption("FIELD_LEADER");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Create a field report" }),
+  ).toBeVisible();
+
+  await page.getByLabel("Project").selectOption({ index: 1 });
+  await page.getByLabel("Area").selectOption({ index: 1 });
+  await page.getByLabel("Team").selectOption({ index: 1 });
+  await page.getByLabel("Report date").fill("2026-05-21");
+  await page.getByLabel("Completed units").fill("16");
+  await page.getByLabel("Manpower count").fill("8");
+  await page.getByLabel("Issues and blockers").fill("Temporary access delay.");
+  await page.getByLabel("Material name").fill("Concrete pole");
+  await page.getByLabel("Quantity").nth(0).fill("16");
+  await page.getByLabel("Unit").nth(0).fill("pcs");
+  await page.getByLabel("Equipment name").fill("Boom truck");
+  await page.getByLabel("Quantity").nth(1).fill("1");
+  await page.getByLabel("Unit").nth(1).fill("unit");
+  await page.getByRole("button", { name: "Save field report" }).click();
+
+  await expect(page).toHaveURL(/\/field-reports$/);
+  await expect(
+    page.getByRole("heading", { name: "Daily field reporting" }),
+  ).toBeVisible();
+  await expect(page.getByText("Temporary access delay.")).toBeVisible();
+  await expect(page.getByText("Concrete pole - 16 pcs")).toBeVisible();
+  await expect(page.getByText("Boom truck - 1 unit")).toBeVisible();
+});

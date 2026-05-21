@@ -4,6 +4,9 @@ import { createPrismaClient } from "../src/lib/db";
 const prisma = createPrismaClient();
 
 async function main() {
+  await prisma.fieldReportEquipment.deleteMany();
+  await prisma.fieldReportMaterial.deleteMany();
+  await prisma.fieldReport.deleteMany();
   await prisma.team.deleteMany();
   await prisma.projectArea.deleteMany();
   await prisma.project.deleteMany();
