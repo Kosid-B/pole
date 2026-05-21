@@ -27,6 +27,7 @@ The strongest routine checks supported by the current baseline are:
 2. `pnpm build`
 3. `pnpm db:push`
 4. `pnpm db:seed`
+5. `pnpm test:e2e`
 
 Current e2e status:
 
@@ -35,9 +36,13 @@ Current e2e status:
 - `tests/e2e/happy-path.spec.ts` defines the admin MVP journey target
 - `tests/e2e/executive-dashboard.spec.ts` defines executive dashboard coverage
 
-These e2e specs are scaffolded for delivery readiness, but the current baseline
-does not yet include Playwright installation/configuration, so they are not part
-of the runnable verification path yet.
+Before the first local e2e run, install the browser once with:
+
+1. `pnpm playwright:install`
+
+Then run:
+
+1. `pnpm test:e2e`
 
 ## Notes
 

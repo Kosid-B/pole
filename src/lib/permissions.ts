@@ -11,7 +11,7 @@ export type NavItem = {
 const routeAccess: Record<AppRole, string[]> = {
   EXECUTIVE: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports"],
   ADMIN: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports"],
-  FIELD_LEADER: ["/", "/field-reports"],
+  FIELD_LEADER: ["/field-reports"],
 };
 
 const navItems: NavItem[] = [

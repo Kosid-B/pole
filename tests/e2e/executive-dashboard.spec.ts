@@ -13,7 +13,7 @@ test("executive can reach the dashboard and see summary widgets", async ({
   await expect(
     page.getByRole("heading", { name: "Executive portfolio dashboard" }),
   ).toBeVisible();
-  await expect(page.getByText("Completion")).toBeVisible();
+  await expect(page.getByText("Completion", { exact: true })).toBeVisible();
   await expect(page.getByText("Risk alerts")).toBeVisible();
   await expect(page.getByText("Project health")).toBeVisible();
 });

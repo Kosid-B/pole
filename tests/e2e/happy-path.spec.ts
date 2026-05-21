@@ -12,27 +12,29 @@ test("admin happy path touches each MVP module", async ({ page }) => {
     page.getByRole("heading", { name: "Executive portfolio dashboard" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /Projects/i }).click();
+  const navigation = page.getByRole("navigation", { name: "Dashboard navigation" });
+
+  await navigation.getByRole("link", { name: /Projects/ }).click();
   await expect(
     page.getByRole("heading", { name: "Project and area management" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /Teams/i }).click();
+  await navigation.getByRole("link", { name: /Teams/ }).click();
   await expect(
     page.getByRole("heading", { name: "Team management" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /Field Reports/i }).click();
+  await navigation.getByRole("link", { name: /Field Reports/ }).click();
   await expect(
     page.getByRole("heading", { name: "Daily field reporting" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /Finance/i }).click();
+  await navigation.getByRole("link", { name: /Finance/ }).click();
   await expect(
     page.getByRole("heading", { name: "Billing and cost tracking" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /Imports/i }).click();
+  await navigation.getByRole("link", { name: /Imports/ }).click();
   await expect(
     page.getByRole("heading", { name: "Import review center" }),
   ).toBeVisible();

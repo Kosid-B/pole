@@ -11,7 +11,9 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node -e \"console.log('Task 1 bootstrap: E2E coverage is deferred until a later task.')\"",
+    "test:e2e": "node playwright.e2e-setup.mjs",
+    "test:e2e:ui": "playwright test --ui",
+    "playwright:install": "playwright install chromium",
     "db:generate": "prisma generate",
     "db:push": "tsx scripts/run-task3-prisma.ts db push --schema prisma/schema.prisma",
     "db:seed": "tsx prisma/seed.ts"
@@ -24,6 +26,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
@@ -32,6 +35,7 @@
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "execa": "^9.6.0",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
     "prisma": "^6.19.0",

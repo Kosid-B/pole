@@ -25,6 +25,15 @@ describe("getSafeRedirectTarget", () => {
       getDefaultDashboardRoute("ADMIN"),
     );
   });
+
+  it("falls back when a role asks for a route it cannot access", () => {
+    expect(getSafeRedirectTarget("/finance", "FIELD_LEADER")).toBe(
+      getDefaultDashboardRoute("FIELD_LEADER"),
+    );
+    expect(getSafeRedirectTarget("/", "FIELD_LEADER")).toBe(
+      getDefaultDashboardRoute("FIELD_LEADER"),
+    );
+  });
 });
 
 describe("getRoleFromEmail", () => {

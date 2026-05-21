@@ -42,5 +42,11 @@ jobs:
       - name: Run Vitest suite
         run: pnpm test
 
+      - name: Install Playwright browser
+        run: pnpm playwright:install
+
+      - name: Run Playwright suite
+        run: pnpm test:e2e
+
       - name: Build application
         run: pnpm build

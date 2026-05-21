@@ -22,11 +22,11 @@ test("field leader can create a field report with material and equipment usage",
   await page.getByLabel("Manpower count").fill("8");
   await page.getByLabel("Issues and blockers").fill("Temporary access delay.");
   await page.getByLabel("Material name").fill("Concrete pole");
-  await page.getByLabel("Quantity").nth(0).fill("16");
-  await page.getByLabel("Unit").nth(0).fill("pcs");
+  await page.getByLabel("Quantity", { exact: true }).nth(0).fill("16");
+  await page.getByLabel("Unit", { exact: true }).nth(0).fill("pcs");
   await page.getByLabel("Equipment name").fill("Boom truck");
-  await page.getByLabel("Quantity").nth(1).fill("1");
-  await page.getByLabel("Unit").nth(1).fill("unit");
+  await page.getByLabel("Quantity", { exact: true }).nth(1).fill("1");
+  await page.getByLabel("Unit", { exact: true }).nth(1).fill("unit");
   await page.getByRole("button", { name: "Save field report" }).click();
 
   await expect(page).toHaveURL(/\/field-reports$/);

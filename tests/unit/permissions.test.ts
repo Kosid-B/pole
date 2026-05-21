@@ -3,6 +3,7 @@ import { canAccessRoute, getDefaultDashboardRoute } from "@/lib/permissions";
 describe("canAccessRoute", () => {
   it("allows field leaders into field reports but blocks finance", () => {
     expect(canAccessRoute("FIELD_LEADER", "/field-reports")).toBe(true);
+    expect(canAccessRoute("FIELD_LEADER", "/")).toBe(false);
     expect(canAccessRoute("FIELD_LEADER", "/finance")).toBe(false);
   });
 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   APP_ROLES,
   type AppRole,
+  canAccessRoute,
   getDefaultDashboardRoute,
   normalizeRole,
 } from "@/lib/permissions";
@@ -37,6 +38,10 @@ export function getSafeRedirectTarget(
   }
 
   if (/[\r\n\t]/.test(normalizedPath)) {
+    return getDefaultDashboardRoute(role);
+  }
+
+  if (!canAccessRoute(role, normalizedPath)) {
     return getDefaultDashboardRoute(role);
   }
 
