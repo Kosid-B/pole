@@ -9,8 +9,8 @@ export type NavItem = {
 };
 
 const routeAccess: Record<AppRole, string[]> = {
-  EXECUTIVE: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports"],
-  ADMIN: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports"],
+  EXECUTIVE: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports", "/site-cost"],
+  ADMIN: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports", "/site-cost"],
   FIELD_LEADER: ["/field-reports"],
 };
 
@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { href: "/field-reports", label: "Field Reports", description: "Daily execution updates" },
   { href: "/finance", label: "Finance", description: "Costs, billing, and collections" },
   { href: "/imports", label: "Imports", description: "Spreadsheet and PDF review" },
+  { href: "/site-cost", label: "Site Cost", description: "Drying yard + Solar costing" },
 ];
 
 function matchesRoutePrefix(route: string, prefix: string) {
