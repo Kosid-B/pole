@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<title>SiteCost 446 • G63/G64</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#dbe3ee;
+  --nav:#0f172a;--accent:#0f766e;--accentSoft:#ccfbf1;--g63:#2563eb;--g64:#16a34a;
+  --a:#1d4ed8;--b:#65a30d;--c:#0891b2;--warn:#b45309;--bad:#b91c1c;
+  --shadow:0 8px 24px rgba(15,23,42,.07);--r:18px
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Kanit,"Noto Sans Thai",system-ui,-apple-system,sans-serif;padding-bottom:92px}
+button,input,select{font:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:40;background:rgba(15,23,42,.97);color:#fff;padding:max(12px,env(safe-area-inset-top)) 14px 12px;backdrop-filter:blur(12px)}
+.head{max-width:1120px;margin:auto;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.head h1{font-size:18px;margin:0;line-height:1.25}.head small{display:block;color:#cbd5e1;margin-top:3px}
+.pill{font-size:12px;padding:7px 10px;border-radius:999px;background:#134e4a;color:#ccfbf1;white-space:nowrap}
+main{max-width:1120px;margin:auto;padding:14px}
+.view{display:none}.view.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px}
+.grid{display:grid;gap:12px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi b{font-size:24px;display:block}.kpi span{font-size:12px;color:var(--muted)}
+.title{font-size:18px;font-weight:800;margin:20px 2px 10px}.sub{font-size:12px;color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;min-width:0}
+.money{font-variant-numeric:tabular-nums}.muted{color:var(--muted);font-size:12px}
+.badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.g63{background:#dbeafe;color:#1d4ed8}.g64{background:#dcfce7;color:#166534}
+.tiera{background:#dbeafe;color:#1d4ed8}.tierb{background:#ecfccb;color:#4d7c0f}.tierc{background:#cffafe;color:#0e7490}
+.note{border-left:4px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.6}
+.good{border-left-color:#22c55e;background:#f0fdf4;color:#166534}
+.explain{display:grid;grid-template-columns:1fr;gap:10px}
+.explain b{display:block;margin-bottom:5px}
+.toolbar{position:sticky;top:72px;z-index:25;background:var(--bg);padding:5px 0 9px}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input,select{width:100%;min-height:46px;border:1px solid #cbd5e1;border-radius:12px;padding:10px 11px;background:#fff;color:var(--ink);font-size:16px}
+input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.seg button{min-height:44px;border:1px solid #cbd5e1;background:#fff;border-radius:12px;font-weight:800;color:var(--ink)}
+.seg button.active{background:var(--accentSoft);border-color:var(--accent);color:#115e59}
+.barRow{display:grid;grid-template-columns:74px 1fr 92px;gap:8px;align-items:center;margin:8px 0}
+.bar{height:18px;border-radius:999px;background:#e2e8f0;overflow:hidden}.bar i{display:block;height:100%;border-radius:999px}
+.bar.a i{background:var(--a)}.bar.b i{background:var(--b)}.bar.c i{background:var(--c)}
+.provRow{display:grid;grid-template-columns:105px 1fr 80px;gap:8px;align-items:center;margin:8px 0}
+.stack{height:18px;background:#e2e8f0;border-radius:999px;overflow:hidden;display:flex}
+.stack .x63{background:var(--g63)}.stack .x64{background:var(--g64)}
+.point{padding:12px 0;border-bottom:1px solid var(--line)}.point:last-child{border-bottom:0}
+.pointTitle{display:flex;align-items:center;gap:6px;font-weight:800;flex-wrap:wrap}
+.pointMeta{font-size:12px;color:var(--muted);margin-top:3px}.pointPrice{font-size:17px;font-weight:900;text-align:right}
+.pointControls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.detailBox{margin-top:9px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.detailBox summary{list-style:none;padding:10px 12px;font-size:12px;font-weight:800;background:#f8fafc;cursor:pointer}
+.detailBox summary::-webkit-details-marker{display:none}
+.breakdown{padding:8px 12px}.breakdown .row{padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:12px}.breakdown .row:last-child{border-bottom:0}
+.catalogHero{background:linear-gradient(135deg,#0f172a,#134e4a);color:#fff}
+.catalogHero .muted{color:#cbd5e1}
+.catalogGrid{display:grid;grid-template-columns:1fr;gap:10px}
+.metric{padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.metric strong{font-size:20px;display:block}.metric small{color:var(--muted)}
+.refTable{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:660px;background:#fff;font-size:12px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}thead th{background:#0f3b73;color:#fff;position:sticky;top:0}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:12px;min-height:44px;padding:10px 13px;background:var(--accent);color:#fff;font-weight:800}
+.btn.secondary{background:#e2e8f0;color:#0f172a}
+.bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:6px 8px max(7px,env(safe-area-inset-bottom));backdrop-filter:blur(14px)}
+.bottomNav .wrap{max-width:720px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.navBtn{border:0;background:transparent;border-radius:12px;padding:7px 2px;color:#64748b;min-height:54px;font-size:11px}
+.navBtn b{display:block;font-size:19px;line-height:1}.navBtn.active{background:#ecfeff;color:#0f766e;font-weight:800}
+.pager{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.source{font-size:11px;color:var(--muted);line-height:1.55}
+.compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.compare>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.compare b{display:block;font-size:16px}.compare small{color:var(--muted)}
+.hidden{display:none!important}
+@media(min-width:760px){
+ .kpis{grid-template-columns:repeat(4,1fr)}.explain{grid-template-columns:repeat(3,1fr)}
+ .filters{grid-template-columns:2fr 1fr 1fr 1fr}.formGrid{grid-template-columns:repeat(4,1fr)}
+ .catalogGrid{grid-template-columns:repeat(3,1fr)}.pointControls{grid-template-columns:150px 150px}
+ .bottomNav .wrap{max-width:520px}
+}
+@media print{header,.bottomNav,.toolbar,.btn{display:none!important}body{padding-bottom:0;background:#fff}.card{box-shadow:none}.view{display:block!important;page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><h1>SiteCost • ลานตาก 446 จุด</h1><small>กำแพงเพชรเป็น Base • ปรับจังหวัดด้วย Research Factor</small></div><span class="pill" id="gmPill">GM 32%</span></div></header>
+
+<main>
+<section id="view-dashboard" class="view active">
+  <div class="grid kpis" id="kpis"></div>
+  <div class="title">หลักการคำนวณ</div>
+  <div class="explain">
+    <div class="card"><b>G = Package งาน</b><div class="sub"><span class="badge g63">G63</span> ลาน + CCTV + Solar + G65<br><span class="badge g64">G64</span> เพิ่ม Speaker + G69</div></div>
+    <div class="card"><b>พื้นที่ = ขนาดจริง</b><div class="sub">ใช้ 120 / 192 / 252 ตร.ม. โดยตรง ไม่มี S/M/L</div></div>
+    <div class="card"><b>Tier = ต้นทุนพื้นที่</b><div class="sub">A/B/C ใช้กับคอนกรีต + Logistics ไม่ใช่รหัส G</div></div>
+  </div>
+  <div class="title">ราคาขายต่อจุด</div>
+  <div class="card">
+    <div class="row"><div><b id="chartGLabel">G63</b><div class="sub">รวมต้นทุน + GM + VAT</div></div>
+      <div class="seg" style="max-width:220px"><button id="g63Btn" class="active">G63</button><button id="g64Btn">G64</button><button id="printBtn">พิมพ์</button></div>
+    </div>
+    <div id="priceChart" style="margin-top:12px"></div>
+    <div class="note" style="margin-top:12px">ราคาจังหวัดคำนวณจาก BOQ กำแพงเพชรเป็นฐาน แล้วปรับ “ค่าแรง” ด้วยอัตราค่าจ้างขั้นต่ำจังหวัด, “วัสดุ/เครื่องจักร” ด้วย Logistics Tier และใช้ราคาคอนกรีตตามอำเภอโดยตรง</div>
+  </div>
+  <div class="title">ราคาขายรวม แยกจังหวัดและ G</div>
+  <div class="card"><div class="row"><div class="sub">เรียงตามมูลค่ารวมปัจจุบัน</div><div><span class="badge g63">G63</span> <span class="badge g64">G64</span></div></div><div id="provinceChart" style="margin-top:10px"></div></div>
+</section>
+
+<section id="view-points" class="view">
+  <div class="title" style="margin-top:2px">จุดติดตั้ง 446 จุด</div>
+  <div class="toolbar"><div class="filters">
+    <input id="search" placeholder="ค้นหา Point ID / จังหวัด / อำเภอ">
+    <select id="filterProvince"><option value="">ทุกจังหวัด</option></select>
+    <select id="filterG"><option value="">ทุก G</option><option>G63</option><option>G64</option></select>
+    <select id="filterArea"><option value="">ทุกพื้นที่</option><option value="120">120 ตร.ม.</option><option value="192">192 ตร.ม.</option><option value="252">252 ตร.ม.</option></select>
+  </div></div>
+  <div class="card"><div id="pointList"></div><div class="pager" id="pager"></div></div>
+</section>
+
+<section id="view-catalog" class="view">
+  <div class="title" style="margin-top:2px">ฐานราคาอ้างอิง</div>
+  <div class="card catalogHero">
+    <div class="formGrid">
+      <div class="field"><label style="color:#cbd5e1">จังหวัด</label><select id="refProvince"></select></div>
+      <div class="field"><label style="color:#cbd5e1">อำเภอ</label><select id="refDistrict"></select></div>
+      <div class="field"><label style="color:#cbd5e1">หมวด</label><select id="refCategory"><option value="labor">ค่าแรง</option><option value="material">วัสดุ</option><option value="machine">เครื่องจักร</option></select></div>
+      <div class="field"><label style="color:#cbd5e1">รายการ</label><select id="refItem"></select></div>
+    </div>
+    <div id="refExplain" style="margin-top:12px"></div>
+  </div>
+  <div class="title">เปรียบเทียบฐาน → จังหวัด</div>
+  <div class="compare" id="refCompare"></div>
+  <div class="title">Dropdown รายการทั้งหมด</div>
+  <div class="refTable"><table><thead><tr><th>รายการ</th><th>ฐานกำแพงเพชร</th><th>หน่วย</th><th>ตัวคูณ</th><th>ราคาที่ใช้</th></tr></thead><tbody id="refRows"></tbody></table></div>
+  <div class="note" style="margin-top:12px">ตัวคูณค่าแรงเป็น Research Proxy จาก “ค่าแรงขั้นต่ำจังหวัด ÷ 347 บาท/วันของกำแพงเพชร” ไม่ใช่อัตราค่าจ้างช่างเฉพาะวิชาชีพ ส่วนวัสดุและเครื่องจักรใช้ Logistics Tier เป็น Proxy; คอนกรีตใช้ราคาตามอำเภอโดยตรง</div>
+</section>
+
+<section id="view-settings" class="view">
+  <div class="title" style="margin-top:2px">ตั้งค่าราคา</div>
+  <div class="card">
+    <div class="formGrid">
+      <div class="field"><label>Gross Margin (%)</label><input id="gm" type="number" min="25" max="32" step="1"></div>
+      <div class="field"><label>VAT (%)</label><input id="vat" type="number" min="0" max="20" step=".1"></div>
+      <div class="field"><label>ค่าขนส่งมาตรฐาน/จุด</label><input id="freight" type="number" min="0" step="100"></div>
+      <div class="field"><label>ค่าแรงติดตั้งเสา/ต้น</label><input id="poleLabor" type="number" min="800" max="840" step="10"></div>
+    </div>
+    <div class="note good" style="margin-top:12px">ค่าแรงเสาตั้งต้น 820 บาท/ต้น และบังคับช่วง 800–840 บาท/ต้นตามข้อมูลที่ยืนยัน</div>
+  </div>
+  <div class="title">Package เพิ่ม</div>
+  <div class="card"><div class="formGrid">
+    <div class="field"><label>G63 CCTV/Smart</label><input class="pkg" data-g="G63" data-k="cctv" type="number" min="0"></div>
+    <div class="field"><label>G63 Solar Hardware</label><input class="pkg" data-g="G63" data-k="solar" type="number" min="0"></div>
+    <div class="field"><label>G63 Pole Hardware</label><input class="pkg" data-g="G63" data-k="pole" type="number" min="0"></div>
+    <div class="field"><label>G64 Speaker</label><input class="pkg" data-g="G64" data-k="speaker" type="number" min="0"></div>
+    <div class="field"><label>G64 CCTV/Smart</label><input class="pkg" data-g="G64" data-k="cctv" type="number" min="0"></div>
+    <div class="field"><label>G64 Solar Hardware</label><input class="pkg" data-g="G64" data-k="solar" type="number" min="0"></div>
+    <div class="field"><label>G64 Pole Hardware</label><input class="pkg" data-g="G64" data-k="pole" type="number" min="0"></div>
+    <div class="field"><label>Other/จุด</label><input id="otherCost" type="number" min="0"></div>
+  </div></div>
+  <div class="title">การใช้เครื่องจักรต่อจุด</div>
+  <div class="card">
+    <div class="sub">เลือกวันใช้งานจาก Dropdown — เริ่มต้น “ไม่ใช้เพิ่ม” เพื่อหลีกเลี่ยง Double Counting กับ BOQ</div>
+    <div id="machineUsage" style="margin-top:10px"></div>
+  </div>
+  <div class="title">แหล่งข้อมูลและวิธีวิจัย</div>
+  <div class="card source">
+    1) BOQ กำแพงเพชร 192 ตร.ม. เป็น Base Rate: Survey 3,500/จุด, Clearing 50/ตร.ม., Compaction 35/ตร.ม.,
+    Geotextile 50+15/ตร.ม., หินคลุก 750/ลบ.ม. + แรง 80/ตร.ม., ทราย 650+120/ลบ.ม., คอนกรีตแรง 450/ลบ.ม.,
+    Wiremesh 35+35/ตร.ม. ฯลฯ<br>
+    2) ค่าแรงขั้นต่ำจังหวัดใช้ตารางกระทรวงแรงงานที่มีผล 1 ก.ค. 2568; กำแพงเพชร = 347 บาท/วัน และใช้เป็นฐาน 1.000<br>
+    3) ค่าเช่าเครื่องจักร Benchmark ตลาด: PC30 3,500, PC60 5,500, PC120 6,500, รถบด 4 ตัน 5,500,
+    รถบดเดินตาม 800, D2 5,500, เครื่องตัดแนวคอนกรีต 700 บาท/วัน; ราคาตลาดอาจไม่รวม VAT/ค่าขนย้าย<br>
+    4) ว 480 ใช้เป็น Cross-check: RB19 &gt;16 มม. 3.50 บาท/กก., Wiremesh 6 บาท/ตร.ม., ค่าแรงเทคอนกรีต 329 บาท/ลบ.ม.
+  </div>
+  <div style="margin-top:12px"><button class="btn secondary" id="resetBtn">คืนค่าเริ่มต้น</button></div>
+</section>
+</main>
+
+<nav class="bottomNav"><div class="wrap">
+<button class="navBtn active" data-view="dashboard"><b>◫</b>สรุป</button>
+<button class="navBtn" data-view="points"><b>⌖</b>446 จุด</button>
+<button class="navBtn" data-view="catalog"><b>▤</b>ฐานราคา</button>
+<button class="navBtn" data-view="settings"><b>⚙</b>ตั้งค่า</button>
+</div></nav>
+
+<script src="./data.js"></script>
+<script src="./app.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{})}</script>
+</body>
+</html>
