@@ -1,3 +1,5 @@
 .next/
 node_modules/
 test-results/
+.env.local
+.env.*.local
