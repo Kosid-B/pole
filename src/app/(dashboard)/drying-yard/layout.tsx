@@ -1,14 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { requireSession } from "@/lib/auth";
+import type { AppRole } from "@/lib/permissions";
 
-const items = [
+type DryingYardNavItem = {
+  href: string;
+  label: string;
+  roles: readonly AppRole[];
+};
+
+const items: readonly DryingYardNavItem[] = [
   { href: "/drying-yard", label: "ภาพรวม", roles: ["EXECUTIVE", "ADMIN", "FIELD_LEADER"] },
   { href: "/drying-yard/sites", label: "จุดติดตั้ง", roles: ["EXECUTIVE", "ADMIN", "FIELD_LEADER"] },
   { href: "/drying-yard/pricing", label: "ราคา & GM", roles: ["EXECUTIVE", "ADMIN"] },
   { href: "/drying-yard/boq", label: "BOQ", roles: ["EXECUTIVE", "ADMIN", "FIELD_LEADER"] },
   { href: "/drying-yard/bookings", label: "การจอง", roles: ["EXECUTIVE", "ADMIN", "FIELD_LEADER"] },
-] as const;
+];
 
 export default async function DryingYardLayout({ children }: { children: ReactNode }) {
   const session = await requireSession();
