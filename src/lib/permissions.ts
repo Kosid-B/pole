@@ -9,14 +9,31 @@ export type NavItem = {
 };
 
 const routeAccess: Record<AppRole, string[]> = {
-  EXECUTIVE: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports"],
-  ADMIN: ["/", "/projects", "/teams", "/field-reports", "/finance", "/imports"],
-  FIELD_LEADER: ["/field-reports"],
+  EXECUTIVE: [
+    "/",
+    "/projects",
+    "/teams",
+    "/field-reports",
+    "/finance",
+    "/imports",
+    "/drying-yard",
+  ],
+  ADMIN: [
+    "/",
+    "/projects",
+    "/teams",
+    "/field-reports",
+    "/finance",
+    "/imports",
+    "/drying-yard",
+  ],
+  FIELD_LEADER: ["/field-reports", "/drying-yard"],
 };
 
 const navItems: NavItem[] = [
   { href: "/", label: "Overview", description: "Command center summary" },
   { href: "/projects", label: "Projects", description: "Project setup and status" },
+  { href: "/drying-yard", label: "งานลานตาก", description: "446 จุด • G63/G64 • BOQ • การจอง" },
   { href: "/teams", label: "Teams", description: "Crew and leader management" },
   { href: "/field-reports", label: "Field Reports", description: "Daily execution updates" },
   { href: "/finance", label: "Finance", description: "Costs, billing, and collections" },
