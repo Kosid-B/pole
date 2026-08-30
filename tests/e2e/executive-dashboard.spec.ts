@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
+import { openAsSeededRole } from "./helpers/session";
 
 test("executive can reach the dashboard and see summary widgets", async ({
   page,
 }) => {
-  await page.goto("/sign-in");
-
-  await page.getByLabel("Email").fill("executive@example.com");
-  await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await openAsSeededRole(
+    page,
+    "executive@example.com",
+    "EXECUTIVE",
+    "/",
+  );
 
   await expect(
     page.getByRole("heading", { name: "Executive portfolio dashboard" }),
