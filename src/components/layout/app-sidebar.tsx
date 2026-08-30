@@ -11,8 +11,8 @@ export function AppSidebar({ session }: AppSidebarProps) {
   const navItems = getNavigationForRole(session.user.role);
 
   return (
-    <aside className="w-full rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 text-slate-100 shadow-2xl shadow-slate-950/30 backdrop-blur lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:w-72 lg:flex-none">
-      <div className="space-y-4">
+    <aside className="w-full rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 text-slate-100 shadow-2xl shadow-slate-950/30 backdrop-blur lg:sticky lg:top-6 lg:flex lg:h-[calc(100vh-3rem)] lg:w-72 lg:flex-none lg:flex-col">
+      <div className="flex-none space-y-4">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.3em] text-sky-200/70">
             Dashboard
@@ -27,7 +27,10 @@ export function AppSidebar({ session }: AppSidebarProps) {
         <RoleBadge role={session.user.role} />
       </div>
 
-      <nav className="mt-8 space-y-2" aria-label="Dashboard navigation">
+      <nav
+        className="mt-8 space-y-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-1"
+        aria-label="Dashboard navigation"
+      >
         {navItems.map((item) => (
           <Link
             key={item.href}
