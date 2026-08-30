@@ -51,6 +51,11 @@ const navItems: NavItem[] = [
     description: "BAC • Cash Flow • Supplier/PO • Advance",
   },
   {
+    href: "/pm/financial",
+    label: "PM Financial",
+    description: "GM ≥32% • Cash Guardrail • Advance Trigger",
+  },
+  {
     href: "/procurement",
     label: "Procurement",
     description: "Cluster • RFQ A/B/C • Framework • Customer funding",
