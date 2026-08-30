@@ -5,10 +5,6 @@ import {
   getProcurementOverview,
 } from "@/lib/drying-yard-modules";
 
-const PROCUREMENT_URL =
-  process.env.NEXT_PUBLIC_DRYING_YARD_PROCUREMENT_URL ||
-  "https://sitecost-lantak-admin.vercel.app/procurement";
-
 function baht(value: number) {
   return new Intl.NumberFormat("th-TH", {
     style: "currency",
@@ -114,14 +110,12 @@ export default async function PmPage() {
             >
               Commercial / Pricing
             </Link>
-            <a
-              href={PROCUREMENT_URL}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/procurement"
               className="rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
             >
-              Procurement ↗
-            </a>
+              Procurement
+            </Link>
           </div>
         </div>
       </header>
@@ -271,14 +265,12 @@ export default async function PmPage() {
                 Procurement API: {procurementResult.error}
               </p>
             )}
-            <a
-              href={PROCUREMENT_URL}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/procurement"
               className="mt-5 block rounded-2xl bg-emerald-400 px-4 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
             >
-              เปิด Procurement Control ↗
-            </a>
+              เปิด Procurement Control
+            </Link>
           </article>
 
           <article className="rounded-3xl border border-sky-300/20 bg-sky-400/10 p-6">
