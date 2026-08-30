@@ -129,6 +129,15 @@ export type ProcurementOverview = {
   };
 };
 
+export type CustomerProposalLink = {
+  ok: boolean;
+  proposal_no: string;
+  version_no: string;
+  status: string;
+  url: string;
+  updated_at: string;
+};
+
 const COMMERCIAL_API_URL =
   process.env.DRYING_YARD_COMMERCIAL_API_URL?.trim() ||
   "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/drying-yard-commercial-api";
@@ -137,9 +146,13 @@ const PM_API_URL =
   process.env.DRYING_YARD_PM_API_URL?.trim() ||
   "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/drying-yard-pm-api";
 
+const PROPOSAL_LINK_API_URL =
+  process.env.DRYING_YARD_PROPOSAL_LINK_API_URL?.trim() ||
+  "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/drying-yard-proposal-link-api";
+
 async function loadAdminModule<T>(
   apiUrl: string,
-  action: string,
+  action?: string,
 ): Promise<LoadResult<T>> {
   const code = process.env.DRYING_YARD_ADMIN_ACCESS_CODE?.trim();
 
@@ -153,10 +166,11 @@ async function loadAdminModule<T>(
   }
 
   try {
+    const body = action ? { code, action } : { code };
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, action }),
+      body: JSON.stringify(body),
       cache: "no-store",
     });
 
@@ -199,4 +213,8 @@ export function getPmOverview() {
 
 export function getProcurementOverview() {
   return loadAdminModule<ProcurementOverview>(PM_API_URL, "procurement_overview");
+}
+
+export function getCustomerProposalLink() {
+  return loadAdminModule<CustomerProposalLink>(PROPOSAL_LINK_API_URL);
 }
