@@ -77,6 +77,9 @@ export default async function ProcurementPage() {
             <Link href="/pm/suppliers/rfq" className="rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
               Open RFQ Console
             </Link>
+            <Link href="/pm/suppliers/award-precheck" className="rounded-2xl bg-violet-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-violet-300">
+              Award Pre-check
+            </Link>
             <Link href="/pm" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10">
               PM Control
             </Link>
