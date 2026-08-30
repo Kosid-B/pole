@@ -8,11 +8,12 @@ test("admin happy path touches each MVP module", async ({ page }) => {
     page.getByRole("heading", { name: "Executive portfolio dashboard" }),
   ).toBeVisible();
 
-  const navigation = page.getByRole("navigation", { name: "Dashboard navigation" });
-
   const openModule = async (name: RegExp) => {
-    const link = navigation.getByRole("link", { name });
-    await link.scrollIntoViewIfNeeded();
+    const link = page
+      .getByRole("navigation", { name: "Dashboard navigation" })
+      .getByRole("link", { name });
+
+    await expect(link).toBeVisible();
     await link.click();
   };
 
