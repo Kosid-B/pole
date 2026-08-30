@@ -6,7 +6,12 @@ export const revalidate = 0;
 export async function GET() {
   const sha = process.env.VERCEL_GIT_COMMIT_SHA?.trim() || "local";
   const explicitVersion = process.env.NEXT_PUBLIC_APP_VERSION?.trim();
-  const version = explicitVersion || (sha === "local" ? "dev" : `build-${sha.slice(0, 7)}`);
+  const buildTag = sha === "local" ? "local" : sha.slice(0, 7);
+  const version = explicitVersion
+    ? `${explicitVersion}+${buildTag}`
+    : sha === "local"
+      ? "dev-local"
+      : `build-${buildTag}`;
 
   return NextResponse.json(
     {
