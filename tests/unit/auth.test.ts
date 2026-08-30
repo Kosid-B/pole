@@ -3,6 +3,7 @@ import {
   getSafeRedirectTarget,
   getSafeSignOutRedirectTarget,
   getSwitchRoleHref,
+  resolveSignInRole,
 } from "@/lib/auth";
 import { getDefaultDashboardRoute } from "@/lib/permissions";
 
@@ -41,6 +42,24 @@ describe("getRoleFromEmail", () => {
     expect(getRoleFromEmail("field@example.com")).toBe("FIELD_LEADER");
     expect(getRoleFromEmail("exec@example.com")).toBe("EXECUTIVE");
     expect(getRoleFromEmail("ops@example.com")).toBe("ADMIN");
+  });
+});
+
+describe("resolveSignInRole", () => {
+  it("keeps explicit demo identities bound to their role", () => {
+    expect(resolveSignInRole("field@example.com", "ADMIN")).toBe(
+      "FIELD_LEADER",
+    );
+    expect(resolveSignInRole("exec@example.com", "ADMIN")).toBe("EXECUTIVE");
+    expect(resolveSignInRole("admin@example.com", "FIELD_LEADER")).toBe(
+      "ADMIN",
+    );
+  });
+
+  it("uses the selected role for identities without a role hint", () => {
+    expect(resolveSignInRole("ops@example.com", "FIELD_LEADER")).toBe(
+      "FIELD_LEADER",
+    );
   });
 });
 
