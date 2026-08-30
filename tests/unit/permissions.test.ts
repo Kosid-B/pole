@@ -5,9 +5,12 @@ describe("canAccessRoute", () => {
     expect(canAccessRoute("FIELD_LEADER", "/field-reports")).toBe(true);
     expect(canAccessRoute("FIELD_LEADER", "/field-readiness")).toBe(true);
     expect(canAccessRoute("FIELD_LEADER", "/field-readiness/site/LT-0001")).toBe(true);
+    expect(canAccessRoute("FIELD_LEADER", "/field-deliveries")).toBe(true);
+    expect(canAccessRoute("FIELD_LEADER", "/field-deliveries/calloff/1")).toBe(true);
     expect(canAccessRoute("FIELD_LEADER", "/")).toBe(false);
     expect(canAccessRoute("FIELD_LEADER", "/pm")).toBe(false);
     expect(canAccessRoute("FIELD_LEADER", "/pm/batches")).toBe(false);
+    expect(canAccessRoute("FIELD_LEADER", "/pm/calloffs")).toBe(false);
     expect(canAccessRoute("FIELD_LEADER", "/procurement")).toBe(false);
     expect(canAccessRoute("FIELD_LEADER", "/finance")).toBe(false);
   });
@@ -15,6 +18,8 @@ describe("canAccessRoute", () => {
   it("allows nested routes when the role has access to the section", () => {
     expect(canAccessRoute("ADMIN", "/finance/invoices")).toBe(true);
     expect(canAccessRoute("ADMIN", "/field-readiness")).toBe(true);
+    expect(canAccessRoute("ADMIN", "/field-deliveries")).toBe(true);
+    expect(canAccessRoute("ADMIN", "/pm/calloffs")).toBe(true);
   });
 
   it("returns a role-appropriate default dashboard route", () => {
