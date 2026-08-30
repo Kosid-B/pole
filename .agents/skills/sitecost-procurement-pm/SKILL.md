@@ -1,6 +1,6 @@
 ---
 name: sitecost-procurement-pm
-description: Run SiteCost Drying Yard 446 procurement sourcing, supplier RFQ, advance/cash-flow decisions, GM guardrails, cluster awards, and PM batch-release checks. Use whenever work touches supplier sourcing, procurement clusters, concrete/aggregate/rebar purchasing, advance payment, cash flow, EAC, GM, PO release, framework agreements, or customer-funded rolling batches.
+description: Run SiteCost Drying Yard 446 procurement sourcing, supplier RFQ, advance/cash-flow decisions, GM guardrails, cluster awards, PM batch-release checks, supplier call-offs, and verified delivery actuals. Use whenever work touches supplier sourcing, procurement clusters, concrete/aggregate/rebar purchasing, advance payment, cash flow, EAC, GM, PO release, framework agreements, customer-funded rolling batches, call-offs, delivery receipts, or actual quantity reconciliation.
 ---
 
 # SiteCost Procurement + PM Financial Control
@@ -12,7 +12,7 @@ Use this skill for the SiteCost Drying Yard 446 project. Treat Admin as PM for i
 ## Source of truth
 
 1. Read live project data before making a financial or procurement decision.
-2. Use Supabase project data as the internal source of truth for BAC, pricing, PM cash-flow settings, work packages, procurement clusters, supplier directory, bids, framework agreements, customer funding, site readiness, and batch releases.
+2. Use Supabase project data as the internal source of truth for BAC, pricing, PM cash-flow settings, work packages, procurement clusters, supplier directory, bids, framework agreements, customer funding, site readiness, batch releases, supplier call-offs, delivery receipts, and PM-verified actual quantities.
 3. Use current public web search only for supplier discovery/contact verification and public reference information. A web-found supplier is a candidate, never an awarded supplier.
 4. Store source URL and contact date when a public contact is found. Mark commercial terms `unconfirmed` until RFQ/quotation/PO evidence exists.
 
@@ -163,6 +163,28 @@ Treat field evidence, PM verification, and Batch Release as three separate contr
 8. `FIELD_LEADER` must not gain access to Supplier RFQ, internal TDC, GM, PM Cash Flow, Award Approval, Framework Activation, or Batch Release controls.
 9. Site `ready` still does **not** mean the Batch may release. Batch Release must separately pass Procurement, Framework, Supplier Capacity/Lead Time, Customer Funding, GM, Rolling Cash, four-week commitment coverage, and schedule/call-off gates.
 
+## Supplier Call-off + Delivery + Verified Actual control
+
+Treat Batch Release, Supplier Call-off, Field Delivery Receipt, PM Delivery Verification, and any future PO/payment/invoice process as separate control events.
+
+1. A Supplier Call-off may be created only by `ADMIN` or `EXECUTIVE`, and only for a Batch whose live status is `released` or `in_progress`.
+2. The Site must belong to that Batch, remain PM-verified ready, and have confirmed concrete quantity > 0.
+3. The supplier must be the live Active Framework Primary or Backup for the Batch Cluster. The bid must still be `confirmed`, the quotation must remain valid on the planned delivery date, and the delivery must fall inside the Framework effective period.
+4. Enforce the Framework call-off notice before the planned delivery time. Never bypass notice merely because the supplier is available.
+5. Require a real external `calloff_ref`. Never invent a Call-off, PO, DO, Agreement, invoice, or legal identifier.
+6. Recalculate Total Delivered Cost from the live bid at Call-off creation and snapshot TDC, quotation reference, payment terms, Framework, Supplier, remaining verified quantity, and actor identity into the immutable audit trail.
+7. Never permit total reserved/verified quantity to exceed the Site's PM-verified concrete quantity.
+8. Quantity allocation rule:
+   - an **open** `confirmed` Call-off reserves its `requested_m3`;
+   - after the Call-off is closed, quantity consumption uses only PM-verified **Accepted Actual** from its delivery receipts;
+   - under-delivery therefore returns the unused quantity to the Site's remaining quantity without rewriting historical Call-offs.
+9. `FIELD_LEADER`, `ADMIN`, or `EXECUTIVE` may submit Delivery Receipt evidence only against an open Call-off. Required evidence includes a real DO/Delivery Ticket reference, delivered quantity, accepted quantity, rejected quantity, and evidence reference. `Delivered = Accepted + Rejected` within 0.01 m3.
+10. Field submission is not Actual. Only `ADMIN` or `EXECUTIVE` may review the receipt. A receipt contributes to Verified Actual only when PM review decision is `accepted`.
+11. Delivery submission and review records are append-only and idempotent. Do not update or delete historical DO/QA evidence.
+12. Do not allow a Call-off to close while any Delivery Receipt remains pending PM review. `completed` requires verified accepted quantity > 0; `cancelled` requires an explicit human reason.
+13. `FIELD_LEADER` must see operational data only: Call-off reference, site/batch, supplier, planned delivery, requested quantity, DO/QA evidence and PM review status. Do not expose TDC, quotation economics, payment terms, margin, funding, supplier negotiation data, or financial snapshots.
+14. A Call-off is **not** a PO, payment authorization, invoice eligibility decision, customer claim, or supplier settlement. Never auto-create or auto-approve those downstream transactions from Call-off or Delivery data.
+
 ## Customer-funded rolling batch
 
 When local suppliers are COD/no-credit, prefer customer-funded rolling batches rather than financing all 446 sites from company cash. Release the next batch only when:
@@ -182,6 +204,7 @@ Do not assume a universal statutory 15% advance cap. Many Thai public constructi
 - Red = HOLD, Amber = CONDITIONAL, Green = PASS.
 - Never hide a GM or cash-flow breach behind an average or total-project profit number.
 - Keep customer-facing pages free of internal supplier bids, cost base, GP, margin, saving target, or internal financing assumptions.
+- Keep FIELD_LEADER Call-off/Delivery surfaces free of TDC, quotation economics, payment terms, GM, cash-flow and funding data.
 
 ## Completion checks
 
@@ -198,4 +221,8 @@ Before finalizing any sourcing or financial recommendation confirm:
 - [ ] Batch release does not exceed four-week cash capacity.
 - [ ] Manual Award and Framework Activation are separate approval events with immutable audit snapshots.
 - [ ] Field submission, PM verification, and Batch Release are separate events; FIELD_LEADER cannot self-verify or release.
-- [ ] Customer-facing data is separated from PM-internal data.
+- [ ] Supplier Call-off is created only from an already Released/Active Batch against live Primary/Backup Framework suppliers.
+- [ ] Field Delivery Receipt is evidence only; Verified Actual counts only PM-accepted receipts.
+- [ ] Open Call-offs reserve requested quantity; closed Call-offs consume verified accepted actual quantity.
+- [ ] Call-off/Delivery never auto-creates PO, payment, invoice, claim or settlement approval.
+- [ ] Customer-facing and field-facing data is separated from PM-internal commercial/financial data.

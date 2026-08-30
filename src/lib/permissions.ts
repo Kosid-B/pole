@@ -15,6 +15,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/teams",
     "/field-reports",
     "/field-readiness",
+    "/field-deliveries",
     "/finance",
     "/imports",
     "/drying-yard",
@@ -28,6 +29,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/teams",
     "/field-reports",
     "/field-readiness",
+    "/field-deliveries",
     "/finance",
     "/imports",
     "/drying-yard",
@@ -35,7 +37,12 @@ const routeAccess: Record<AppRole, string[]> = {
     "/pm",
     "/procurement",
   ],
-  FIELD_LEADER: ["/field-reports", "/field-readiness", "/drying-yard"],
+  FIELD_LEADER: [
+    "/field-reports",
+    "/field-readiness",
+    "/field-deliveries",
+    "/drying-yard",
+  ],
 };
 
 const navItems: NavItem[] = [
@@ -68,6 +75,11 @@ const navItems: NavItem[] = [
     description: "Site readiness • 14-day forecast • Manual release",
   },
   {
+    href: "/pm/calloffs",
+    label: "Supplier Call-off",
+    description: "Released Batch • Supplier • DO • Actual quantity",
+  },
+  {
     href: "/procurement",
     label: "Procurement",
     description: "Cluster • RFQ A/B/C • Framework • Customer funding",
@@ -75,6 +87,7 @@ const navItems: NavItem[] = [
   { href: "/teams", label: "Teams", description: "Crew and leader management" },
   { href: "/field-reports", label: "Field Reports", description: "Daily execution updates" },
   { href: "/field-readiness", label: "Field Readiness", description: "Site evidence • PM verification • Batch gate" },
+  { href: "/field-deliveries", label: "Field Delivery", description: "DO • QA evidence • PM verified actual" },
   { href: "/finance", label: "Finance", description: "Costs, billing, and collections" },
   { href: "/imports", label: "Imports", description: "Spreadsheet and PDF review" },
 ];
