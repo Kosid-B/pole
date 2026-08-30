@@ -114,6 +114,29 @@ export type PmOverview = {
   }>;
 };
 
+export type ProcurementBid = {
+  id: string;
+  supplier_slot: "A" | "B" | "C";
+  supplier_name: string | null;
+  plant_location: string | null;
+  base_rate: number | null;
+  freight_per_m3: number | null;
+  pump_per_m3: number | null;
+  waiting_per_m3: number | null;
+  short_load_per_m3: number | null;
+  cash_discount_per_m3: number | null;
+  volume_rebate_per_m3: number | null;
+  schedule_discount_per_m3: number | null;
+  other_adjustment_per_m3: number | null;
+  capacity_m3_day: number | null;
+  lead_time_days: number | null;
+  payment_terms: string | null;
+  quotation_ref: string | null;
+  valid_until: string | null;
+  bid_status: string | null;
+  effective_delivered_cost: number;
+};
+
 export type ProcurementOverview = {
   ok: boolean;
   summary: {
@@ -127,6 +150,45 @@ export type ProcurementOverview = {
     coverage_pct: number;
     weighted_awarded_saving_per_m3: number;
   };
+  clusters: Array<{
+    id: string;
+    material_group: string;
+    cluster_name: string;
+    province: string;
+    forecast_sites: number;
+    forecast_volume_m3: number;
+    benchmark_delivered_rate: number;
+    target_saving_per_m3: number;
+    target_rate: number;
+    target_saving_total: number;
+    customer_payment_mode: string | null;
+    customer_funded_pct: number | null;
+    rfq_status: string | null;
+    awarded_supplier_name: string | null;
+    awarded_effective_rate: number | null;
+    awarded_saving_per_m3: number;
+    awarded_saving_total: number;
+    primary_share_pct: number | null;
+    backup_share_pct: number | null;
+    forecast_window_days: number | null;
+    calloff_notice_hours: number | null;
+    bids: ProcurementBid[];
+    agreement: {
+      agreement_no: string | null;
+      primary_share_pct: number | null;
+      backup_share_pct: number | null;
+      payment_mode: string | null;
+      status: string | null;
+    } | null;
+    funding: {
+      funding_mode: string | null;
+      funded_pct: number | null;
+      payment_trigger: string | null;
+      settlement_days: number | null;
+      approved_ceiling: number | null;
+      status: string | null;
+    } | null;
+  }>;
 };
 
 export type CustomerProposalLink = {
