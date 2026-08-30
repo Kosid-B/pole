@@ -19,6 +19,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/drying-yard",
     "/commercial",
     "/pm",
+    "/procurement",
   ],
   ADMIN: [
     "/",
@@ -30,6 +31,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/drying-yard",
     "/commercial",
     "/pm",
+    "/procurement",
   ],
   FIELD_LEADER: ["/field-reports", "/drying-yard"],
 };
@@ -46,7 +48,12 @@ const navItems: NavItem[] = [
   {
     href: "/pm",
     label: "PM Control",
-    description: "BAC • Cash Flow • Procurement • Framework",
+    description: "BAC • Cash Flow • Supplier/PO • Advance",
+  },
+  {
+    href: "/procurement",
+    label: "Procurement",
+    description: "Cluster • RFQ A/B/C • Framework • Customer funding",
   },
   { href: "/teams", label: "Teams", description: "Crew and leader management" },
   { href: "/field-reports", label: "Field Reports", description: "Daily execution updates" },
