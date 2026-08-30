@@ -7,6 +7,7 @@ import {
   type AppRole,
 } from "@/lib/permissions";
 
+const USER_ID_COOKIE_NAME = "pm-user-id";
 const ROLE_COOKIE_NAME = "pm-role";
 
 function isProtectedPath(pathname: string) {
@@ -25,8 +26,10 @@ function isProtectedPath(pathname: string) {
 }
 
 function getRole(request: NextRequest): AppRole | null {
+  const userId = request.cookies.get(USER_ID_COOKIE_NAME)?.value;
   const role = request.cookies.get(ROLE_COOKIE_NAME)?.value;
 
+  if (!userId) return null;
   return normalizeRole(role ?? undefined);
 }
 
