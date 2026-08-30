@@ -19,7 +19,8 @@ function isProtectedPath(pathname: string) {
     pathname.startsWith("/imports") ||
     pathname.startsWith("/drying-yard") ||
     pathname.startsWith("/commercial") ||
-    pathname.startsWith("/pm")
+    pathname.startsWith("/pm") ||
+    pathname.startsWith("/procurement")
   );
 }
 
@@ -76,5 +77,6 @@ export const config = {
     "/drying-yard/:path*",
     "/commercial/:path*",
     "/pm/:path*",
+    "/procurement/:path*",
   ],
 };
