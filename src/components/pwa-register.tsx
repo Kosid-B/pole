@@ -56,7 +56,6 @@ async function readLatestVersion(): Promise<VersionInfo> {
 
 export function PwaRegister() {
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [latest, setLatest] = useState<VersionInfo | null>(null);
   const [installedVersion, setInstalledVersion] = useState<string | null>(null);
@@ -66,6 +65,7 @@ export function PwaRegister() {
   const [standalone, setStandalone] = useState(false);
   const [ios, setIos] = useState(false);
   const reloadingRef = useRef(false);
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
   const updateAvailable = useMemo(() => {
     if (waiting) return true;
@@ -91,12 +91,13 @@ export function PwaRegister() {
         setInstalledVersion(stored);
       }
 
-      await registration?.update();
+      const currentRegistration = registrationRef.current;
+      await currentRegistration?.update();
 
       if (!silent) {
         if (stored && stored !== info.version) {
           setMessage(`พบเวอร์ชันใหม่ ${info.version}`);
-        } else if (registration?.waiting) {
+        } else if (currentRegistration?.waiting) {
           setMessage("พบ Service Worker เวอร์ชันใหม่พร้อมอัปเดต");
         } else {
           setMessage("เป็นเวอร์ชันล่าสุดแล้ว");
@@ -113,7 +114,7 @@ export function PwaRegister() {
     } finally {
       if (!silent) setChecking(false);
     }
-  }, [registration]);
+  }, []);
 
   const applyUpdate = useCallback(async () => {
     setChecking(true);
@@ -122,9 +123,11 @@ export function PwaRegister() {
     try {
       const info = await readLatestVersion();
       setLatest(info);
-      await registration?.update();
 
-      const activeWaiting = registration?.waiting || waiting;
+      const currentRegistration = registrationRef.current;
+      await currentRegistration?.update();
+
+      const activeWaiting = currentRegistration?.waiting || waiting;
       if (activeWaiting) {
         activeWaiting.postMessage({ type: "SKIP_WAITING" });
       }
@@ -141,8 +144,6 @@ export function PwaRegister() {
       window.localStorage.setItem(INSTALLED_VERSION_KEY, info.version);
       setInstalledVersion(info.version);
 
-      // Warm the current route from the network before the reload. Dynamic pages are never
-      // stored by the Service Worker, so this pulls the newest Vercel deployment immediately.
       await fetch(window.location.href, {
         cache: "reload",
         credentials: "same-origin",
@@ -160,7 +161,7 @@ export function PwaRegister() {
         error instanceof Error ? `อัปเดตไม่สำเร็จ: ${error.message}` : "อัปเดตไม่สำเร็จ",
       );
     }
-  }, [registration, waiting]);
+  }, [waiting]);
 
   const installApp = useCallback(async () => {
     if (standalone) {
@@ -239,7 +240,7 @@ export function PwaRegister() {
         });
 
         if (!mounted) return;
-        setRegistration(nextRegistration);
+        registrationRef.current = nextRegistration;
         if (nextRegistration.waiting) setWaiting(nextRegistration.waiting);
 
         nextRegistration.addEventListener("updatefound", () => {
@@ -264,7 +265,7 @@ export function PwaRegister() {
 
     const onVisible = () => {
       if (document.visibilityState === "visible") {
-        void registration?.update();
+        void registrationRef.current?.update();
         void checkVersion(true);
       }
     };
@@ -281,11 +282,12 @@ export function PwaRegister() {
 
     return () => {
       mounted = false;
+      registrationRef.current = null;
       if (timer) window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
     };
-  }, [checkVersion, registration]);
+  }, [checkVersion]);
 
   return (
     <>
@@ -309,7 +311,10 @@ export function PwaRegister() {
       </button>
 
       {panelOpen ? (
-        <div className="fixed inset-0 z-[110] bg-slate-950/55 p-4 backdrop-blur-sm" onClick={() => setPanelOpen(false)}>
+        <div
+          className="fixed inset-0 z-[110] bg-slate-950/55 p-4 backdrop-blur-sm"
+          onClick={() => setPanelOpen(false)}
+        >
           <section
             role="dialog"
             aria-modal="true"
@@ -351,7 +356,13 @@ export function PwaRegister() {
             <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-slate-400">สถานะติดตั้ง</span>
-                <span className={standalone ? "font-semibold text-emerald-300" : "font-semibold text-amber-300"}>
+                <span
+                  className={
+                    standalone
+                      ? "font-semibold text-emerald-300"
+                      : "font-semibold text-amber-300"
+                  }
+                >
                   {standalone ? "ติดตั้งแล้ว" : "ยังเปิดผ่าน Browser"}
                 </span>
               </div>
