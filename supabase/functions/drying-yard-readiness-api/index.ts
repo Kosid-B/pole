@@ -61,14 +61,16 @@ async function overview(db: any, pid: string, label: string, viewerRole: string)
   for (const row of bsR.data || []) {
     const site = siteMap.get(row.site_id) as any;
     if (!site) continue;
+    const latestSubmission = latestSubmissionBySite.get(row.site_id) || null;
+    const baseVerified = ["ready", "released", "completed"].includes(String(row.readiness_status || ""));
     const item = {
       ...row,
       site_code: site.site_code,
       site_status: site.status,
       metadata: site.metadata,
       location: locMap.get(site.location_id) || null,
-      latest_submission: latestSubmissionBySite.get(row.site_id) || null,
-      verified_ready: ["ready", "released", "completed"].includes(String(row.readiness_status || "")),
+      latest_submission: latestSubmission,
+      verified_ready: baseVerified && (!latestSubmission || Boolean(latestSubmission.review)),
     };
     const list = sitesByBatch.get(row.batch_id) || [];
     list.push(item); sitesByBatch.set(row.batch_id, list);
@@ -101,7 +103,7 @@ async function overview(db: any, pid: string, label: string, viewerRole: string)
       verified_ready: batches.reduce((sum: number, b: any) => sum + b.summary.verified_ready, 0),
     },
     batches,
-    rule: "FIELD_LEADER may submit evidence. Only ADMIN/EXECUTIVE can verify and write READY into batch readiness. Batch release remains a separate ADMIN/EXECUTIVE action.",
+    rule: "FIELD_LEADER may submit evidence. Any newer unreviewed field submission makes prior READY verification stale. Only ADMIN/EXECUTIVE can verify the latest candidate and write READY. Batch release remains a separate ADMIN/EXECUTIVE action.",
   });
 }
 
