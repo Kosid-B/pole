@@ -8,9 +8,10 @@ const PROCUREMENT_URL =
   process.env.NEXT_PUBLIC_DRYING_YARD_PROCUREMENT_URL ||
   "https://sitecost-lantak-admin.vercel.app/procurement";
 
-const CUSTOMER_PROPOSAL_URL =
-  process.env.NEXT_PUBLIC_DRYING_YARD_PROPOSAL_URL ||
-  "https://sitecost-lantak-admin.vercel.app/proposal?token=1f71e43b-efa6-4f99-8355-77918add33ec";
+// Customer proposal access is intentionally server-configured. Do not hardcode
+// proposal tokens in source control. The URL is rendered only inside the
+// authenticated PM module.
+const CUSTOMER_PROPOSAL_URL = process.env.DRYING_YARD_PROPOSAL_URL;
 
 function baht(value: number) {
   return new Intl.NumberFormat("th-TH", {
@@ -291,14 +292,20 @@ export default async function PmPage() {
               ลูกค้าเห็น Scope, Cluster, Volume, Procurement status และ Payment
               Model แต่ไม่เห็น Cost Base, Margin หรือ Supplier bid ภายใน
             </p>
-            <a
-              href={CUSTOMER_PROPOSAL_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 block rounded-2xl border border-sky-300/20 bg-sky-400/10 px-4 py-3 text-center text-sm font-medium text-sky-100 transition hover:bg-sky-400/20"
-            >
-              เปิด Customer Proposal ↗
-            </a>
+            {CUSTOMER_PROPOSAL_URL ? (
+              <a
+                href={CUSTOMER_PROPOSAL_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 block rounded-2xl border border-sky-300/20 bg-sky-400/10 px-4 py-3 text-center text-sm font-medium text-sky-100 transition hover:bg-sky-400/20"
+              >
+                เปิด Customer Proposal ↗
+              </a>
+            ) : (
+              <p className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+                Customer Proposal URL ยังไม่ได้ตั้งค่าใน production environment
+              </p>
+            )}
           </article>
         </div>
       </div>
