@@ -1,0 +1,10 @@
+create index if not exists idx_drying_yard_supplier_calloffs_project_status on public.drying_yard_supplier_calloffs(project_id, status, created_at desc);
+create index if not exists idx_drying_yard_supplier_calloffs_framework on public.drying_yard_supplier_calloffs(framework_id);
+create index if not exists idx_drying_yard_supplier_calloffs_supplier_bid on public.drying_yard_supplier_calloffs(supplier_bid_id);
+create index if not exists idx_drying_yard_delivery_receipts_project_submitted on public.drying_yard_delivery_receipt_submissions(project_id, submitted_at desc);
+create index if not exists idx_drying_yard_delivery_receipts_batch on public.drying_yard_delivery_receipt_submissions(batch_id);
+create index if not exists idx_drying_yard_delivery_reviews_project_reviewed on public.drying_yard_delivery_receipt_reviews(project_id, reviewed_at desc);
+create index if not exists idx_drying_yard_delivery_reviews_batch on public.drying_yard_delivery_receipt_reviews(batch_id);
+create index if not exists idx_drying_yard_delivery_reviews_site on public.drying_yard_delivery_receipt_reviews(site_id);
+create index if not exists idx_drying_yard_calloff_audit_project_created on public.drying_yard_calloff_audit(project_id, created_at desc);
+create index if not exists idx_drying_yard_calloff_audit_calloff on public.drying_yard_calloff_audit(calloff_id, created_at desc);
