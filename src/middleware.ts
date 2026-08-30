@@ -16,7 +16,10 @@ function isProtectedPath(pathname: string) {
     pathname.startsWith("/teams") ||
     pathname.startsWith("/field-reports") ||
     pathname.startsWith("/finance") ||
-    pathname.startsWith("/imports")
+    pathname.startsWith("/imports") ||
+    pathname.startsWith("/drying-yard") ||
+    pathname.startsWith("/commercial") ||
+    pathname.startsWith("/pm")
   );
 }
 
@@ -62,5 +65,16 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/sign-in", "/projects/:path*", "/teams/:path*", "/field-reports/:path*", "/finance/:path*", "/imports/:path*"],
+  matcher: [
+    "/",
+    "/sign-in",
+    "/projects/:path*",
+    "/teams/:path*",
+    "/field-reports/:path*",
+    "/finance/:path*",
+    "/imports/:path*",
+    "/drying-yard/:path*",
+    "/commercial/:path*",
+    "/pm/:path*",
+  ],
 };
