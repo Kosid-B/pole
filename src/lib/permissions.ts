@@ -61,6 +61,11 @@ const navItems: NavItem[] = [
     description: "Manual Primary/Backup • Framework • Audit trail",
   },
   {
+    href: "/pm/batches",
+    label: "Batch Release",
+    description: "Site readiness • 14-day forecast • Manual release",
+  },
+  {
     href: "/procurement",
     label: "Procurement",
     description: "Cluster • RFQ A/B/C • Framework • Customer funding",
