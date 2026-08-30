@@ -17,6 +17,8 @@ const routeAccess: Record<AppRole, string[]> = {
     "/finance",
     "/imports",
     "/drying-yard",
+    "/commercial",
+    "/pm",
   ],
   ADMIN: [
     "/",
@@ -26,6 +28,8 @@ const routeAccess: Record<AppRole, string[]> = {
     "/finance",
     "/imports",
     "/drying-yard",
+    "/commercial",
+    "/pm",
   ],
   FIELD_LEADER: ["/field-reports", "/drying-yard"],
 };
@@ -34,6 +38,16 @@ const navItems: NavItem[] = [
   { href: "/", label: "Overview", description: "Command center summary" },
   { href: "/projects", label: "Projects", description: "Project setup and status" },
   { href: "/drying-yard", label: "งานลานตาก", description: "446 จุด • G63/G64 • BOQ • การจอง" },
+  {
+    href: "/commercial",
+    label: "Commercial / Pricing",
+    description: "ราคา • Tier • G63/G64 • จังหวัด • Quote",
+  },
+  {
+    href: "/pm",
+    label: "PM Control",
+    description: "BAC • Cash Flow • Procurement • Framework",
+  },
   { href: "/teams", label: "Teams", description: "Crew and leader management" },
   { href: "/field-reports", label: "Field Reports", description: "Daily execution updates" },
   { href: "/finance", label: "Finance", description: "Costs, billing, and collections" },
