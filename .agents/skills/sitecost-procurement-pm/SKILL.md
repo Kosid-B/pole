@@ -123,6 +123,26 @@ A supplier may be recommended for award only when:
 
 Maintain a Primary and Backup supplier where operationally justified. Do not auto-award a web-sourced candidate.
 
+## Manual award + Framework Agreement control
+
+Supplier Award is a human-controlled write action, not an automatic consequence of ranking.
+
+1. Run approval **per Cluster** so customer-funded rolling batches can proceed without waiting for all 446 sites.
+2. Before `award_approved`, backend must reload current data and require simultaneously:
+   - two distinct Award-ready confirmed bids for Primary + Backup;
+   - valid quotations and positive server-calculated TDC;
+   - capacity, lead time and payment terms complete;
+   - Forecast GM >= 32.00%;
+   - Minimum Rolling Cash >= Safety Reserve;
+   - Customer Direct Pay / Material Advance for that Cluster is `approved`, `active` or `confirmed` and > 0%.
+3. Award approval must record the signed-in approver identity, role, decision rationale, Primary/Backup bid IDs and a snapshot of TDC, GM, cash and funding.
+4. Use idempotency `request_id` so a double submit cannot create duplicate approval records.
+5. Award audit records are append-only. Do not update or delete historical approval events.
+6. Award approval may populate the Framework draft with Primary/Backup and set status `award_approved`, but must **not** activate the Framework automatically.
+7. Framework Activation is a second manual action. Require a real Agreement No., effective-from date, current valid Primary/Backup quotations, Cluster funding, GM and Cash gates before status becomes `active`.
+8. Never invent Agreement No. or contract effective dates.
+9. Framework defaults currently use Primary 70% / Backup 30%, call-off notice 72 hours and rolling forecast 14 days unless live contract terms say otherwise.
+
 ## Customer-funded rolling batch
 
 When local suppliers are COD/no-credit, prefer customer-funded rolling batches rather than financing all 446 sites from company cash. Release the next batch only when:
@@ -156,4 +176,5 @@ Before finalizing any sourcing or financial recommendation confirm:
 - [ ] Quote validity and QA/spec requirements are checked.
 - [ ] Customer payment timing and retention are reflected in cash flow.
 - [ ] Batch release does not exceed four-week cash capacity.
+- [ ] Manual Award and Framework Activation are separate approval events with immutable audit snapshots.
 - [ ] Customer-facing data is separated from PM-internal data.
