@@ -56,6 +56,11 @@ const navItems: NavItem[] = [
     description: "GM ≥32% • Cash Guardrail • Advance Trigger",
   },
   {
+    href: "/pm/suppliers/award-approval",
+    label: "Award Approval",
+    description: "Manual Primary/Backup • Framework • Audit trail",
+  },
+  {
     href: "/procurement",
     label: "Procurement",
     description: "Cluster • RFQ A/B/C • Framework • Customer funding",
