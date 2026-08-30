@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openAsSeededRole } from "./helpers/session";
 
 test("admin can sign in and reach the protected dashboard shell", async ({
   page,
@@ -7,11 +8,15 @@ test("admin can sign in and reach the protected dashboard shell", async ({
 
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await Promise.all([
+    page.waitForURL((url) => url.pathname !== "/sign-in", { timeout: 30_000 }),
+    page.getByRole("button", { name: "Sign in" }).click(),
+  ]);
 
   await expect(
     page.getByRole("heading", { name: "Project operations dashboard" }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 30_000 });
   await expect(
     page.getByRole("navigation", { name: "Dashboard navigation" }),
   ).toBeVisible();
@@ -19,11 +24,12 @@ test("admin can sign in and reach the protected dashboard shell", async ({
 });
 
 test("field leaders are redirected away from finance", async ({ page }) => {
-  await page.goto("/sign-in?redirectTo=/finance");
-
-  await page.getByLabel("Email").fill("field@example.com");
-  await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await openAsSeededRole(
+    page,
+    "field@example.com",
+    "FIELD_LEADER",
+    "/finance",
+  );
 
   await expect(page).toHaveURL(/\/field-reports$/);
   await expect(

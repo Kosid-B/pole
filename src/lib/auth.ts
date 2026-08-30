@@ -170,21 +170,26 @@ export async function signInWithPassword(formData: FormData) {
 
   const cookieStore = await cookies();
 
-  cookieStore.set(USER_ID_COOKIE_NAME, user.id, {
+  // Replace the complete auth tuple atomically from the browser's point of view.
+  // Deleting first prevents stale/duplicate path cookies from carrying a previous role.
+  cookieStore.delete(USER_ID_COOKIE_NAME);
+  cookieStore.delete(ROLE_COOKIE_NAME);
+  cookieStore.delete(EMAIL_COOKIE_NAME);
+
+  // Production deployments stay Secure. Playwright explicitly opts into HTTP-localhost
+  // mode so the real sign-in flow can be exercised without silently dropping cookies.
+  const secureCookie =
+    process.env.NODE_ENV === "production" && process.env.E2E_HTTP !== "1";
+  const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
+    secure: secureCookie,
     path: "/",
-  });
-  cookieStore.set(ROLE_COOKIE_NAME, user.role, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
-  cookieStore.set(EMAIL_COOKIE_NAME, user.email, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
+  };
+
+  cookieStore.set(USER_ID_COOKIE_NAME, user.id, cookieOptions);
+  cookieStore.set(ROLE_COOKIE_NAME, user.role, cookieOptions);
+  cookieStore.set(EMAIL_COOKIE_NAME, user.email, cookieOptions);
 
   redirect(sanitizeRedirect(redirectTo, user.role));
 }

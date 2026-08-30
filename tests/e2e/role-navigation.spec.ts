@@ -1,17 +1,13 @@
-import { expect, test, type Page } from "@playwright/test";
-
-async function signInAsRole(
-  page: Page,
-  email: string,
-) {
-  await page.goto("/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
-}
+import { expect, test } from "@playwright/test";
+import { openAsSeededRole } from "./helpers/session";
 
 test("executive sees cross-functional navigation", async ({ page }) => {
-  await signInAsRole(page, "executive@example.com");
+  await openAsSeededRole(
+    page,
+    "executive@example.com",
+    "EXECUTIVE",
+    "/",
+  );
 
   await expect(
     page.getByRole("navigation", { name: "Dashboard navigation" }),
@@ -27,7 +23,12 @@ test("executive sees cross-functional navigation", async ({ page }) => {
 });
 
 test("field leader only keeps field reporting access", async ({ page }) => {
-  await signInAsRole(page, "field@example.com");
+  await openAsSeededRole(
+    page,
+    "field@example.com",
+    "FIELD_LEADER",
+    "/field-reports",
+  );
 
   await expect(page).toHaveURL(/\/field-reports$/);
   await expect(page.getByRole("link", { name: /Field Reports/i })).toBeVisible();

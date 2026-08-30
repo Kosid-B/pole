@@ -1,16 +1,42 @@
 {
   "id": "/",
-  "name": "Pole & Drying Yard SaaS",
-  "short_name": "Pole SaaS",
-  "description": "ระบบ SaaS งานเสาไฟฟ้าและงานลานตาก 446 จุด",
+  "name": "SiteCost Drying Yard 446",
+  "short_name": "SiteCost 446",
+  "description": "Commercial, PM, Procurement และ Financial Guardrails สำหรับโครงการงานลานตาก 446 จุด",
   "lang": "th",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#020617",
-  "theme_color": "#020617",
-  "categories": ["business", "productivity"],
+  "theme_color": "#0f172a",
+  "categories": ["business", "productivity", "finance"],
   "icons": [
-    { "src": "/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Commercial / Pricing",
+      "short_name": "Commercial",
+      "url": "/commercial",
+      "icons": [{ "src": "/app-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "PM Control",
+      "short_name": "PM",
+      "url": "/pm",
+      "icons": [{ "src": "/app-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "PM Financial Guardrails",
+      "short_name": "Financial",
+      "url": "/pm/financial",
+      "icons": [{ "src": "/app-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
   ]
 }

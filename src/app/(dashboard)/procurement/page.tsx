@@ -74,6 +74,9 @@ export default async function ProcurementPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Link href="/pm/suppliers/rfq" className="rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
+              Open RFQ Console
+            </Link>
             <Link href="/pm" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10">
               PM Control
             </Link>
