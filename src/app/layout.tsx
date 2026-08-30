@@ -1,12 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/app/app-shell";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pole & Drying Yard SaaS",
-  description: "ระบบ SaaS งานเสาไฟฟ้าและงานลานตาก 446 จุด",
+  title: {
+    default: "SiteCost Drying Yard 446",
+    template: "%s | SiteCost 446",
+  },
+  description:
+    "Commercial, PM, Procurement และ Financial Guardrails สำหรับโครงการงานลานตาก 446 จุด",
+  applicationName: "SiteCost Drying Yard 446",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/app-icon.svg",
@@ -15,8 +20,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Pole SaaS",
+    title: "SiteCost 446",
   },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0f172a",
+  colorScheme: "dark",
 };
 
 type RootLayoutProps = {
