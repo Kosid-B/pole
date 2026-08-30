@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
+import { openAsSeededRole } from "./helpers/session";
 
 test("field leader can create a field report with material and equipment usage", async ({
   page,
 }) => {
-  await page.goto("/sign-in?redirectTo=/field-reports/new");
-
-  await page.getByLabel("Email").fill("field@example.com");
-  await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await openAsSeededRole(
+    page,
+    "field@example.com",
+    "FIELD_LEADER",
+    "/field-reports/new",
+  );
 
   await expect(
     page.getByRole("heading", { name: "Create a field report" }),
