@@ -12,7 +12,7 @@ Use this skill for the SiteCost Drying Yard 446 project. Treat Admin as PM for i
 ## Source of truth
 
 1. Read live project data before making a financial or procurement decision.
-2. Use Supabase project data as the internal source of truth for BAC, pricing, PM cash-flow settings, work packages, procurement clusters, supplier directory, bids, framework agreements, and customer funding.
+2. Use Supabase project data as the internal source of truth for BAC, pricing, PM cash-flow settings, work packages, procurement clusters, supplier directory, bids, framework agreements, customer funding, site readiness, and batch releases.
 3. Use current public web search only for supplier discovery/contact verification and public reference information. A web-found supplier is a candidate, never an awarded supplier.
 4. Store source URL and contact date when a public contact is found. Mark commercial terms `unconfirmed` until RFQ/quotation/PO evidence exists.
 
@@ -143,6 +143,26 @@ Supplier Award is a human-controlled write action, not an automatic consequence 
 8. Never invent Agreement No. or contract effective dates.
 9. Framework defaults currently use Primary 70% / Backup 30%, call-off notice 72 hours and rolling forecast 14 days unless live contract terms say otherwise.
 
+## Field Site Readiness + PM verification
+
+Treat field evidence, PM verification, and Batch Release as three separate control events.
+
+1. `FIELD_LEADER`, `ADMIN`, or `EXECUTIVE` may create a new Site Readiness **submission** for a site that belongs to an unlocked Rolling Batch.
+2. A field submission is append-only evidence. It must never directly change the Batch site to `ready`.
+3. Candidate Ready requires all of the following in the latest submission:
+   - quantity confirmed;
+   - drawing confirmed;
+   - site condition confirmed;
+   - access ready;
+   - confirmed concrete volume > 0 m3;
+   - evidence reference present.
+4. Only `ADMIN` or `EXECUTIVE` may review a submission. Acceptance of the **latest** Candidate Ready submission copies its verified values to Batch Site Readiness and changes that site to `ready`.
+5. Rejecting a submission leaves the existing Batch Site Readiness unchanged.
+6. Never accept a stale submission when a newer field submission exists for the same site.
+7. Submission and review records are append-only, idempotent, RLS-protected, and writable only through server-side service-role RPCs.
+8. `FIELD_LEADER` must not gain access to Supplier RFQ, internal TDC, GM, PM Cash Flow, Award Approval, Framework Activation, or Batch Release controls.
+9. Site `ready` still does **not** mean the Batch may release. Batch Release must separately pass Procurement, Framework, Supplier Capacity/Lead Time, Customer Funding, GM, Rolling Cash, four-week commitment coverage, and schedule/call-off gates.
+
 ## Customer-funded rolling batch
 
 When local suppliers are COD/no-credit, prefer customer-funded rolling batches rather than financing all 446 sites from company cash. Release the next batch only when:
@@ -177,4 +197,5 @@ Before finalizing any sourcing or financial recommendation confirm:
 - [ ] Customer payment timing and retention are reflected in cash flow.
 - [ ] Batch release does not exceed four-week cash capacity.
 - [ ] Manual Award and Framework Activation are separate approval events with immutable audit snapshots.
+- [ ] Field submission, PM verification, and Batch Release are separate events; FIELD_LEADER cannot self-verify or release.
 - [ ] Customer-facing data is separated from PM-internal data.

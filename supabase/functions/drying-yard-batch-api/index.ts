@@ -80,7 +80,7 @@ function readiness(row: any) {
 }
 
 async function buildOverview(db: any, pid: string, code: string, label: string) {
-  const [financial, batchR, batchSiteR, siteR, frameworkR, bidR, fundingR, auditR] = await Promise.all([
+  const [financial, batchR, batchSiteR, siteR, frameworkR, bidR, fundingR, auditR, subR, revR] = await Promise.all([
     loadFinancial(code),
     db.from("drying_yard_batch_releases").select("*").eq("project_id", pid).order("batch_code"),
     db.from("drying_yard_batch_release_sites").select("*").order("sequence_no"),
@@ -89,12 +89,20 @@ async function buildOverview(db: any, pid: string, code: string, label: string) 
     db.from("drying_yard_procurement_bids").select("id,cluster_id,supplier_name,capacity_m3_day,lead_time_days,payment_terms,bid_status,valid_until").eq("project_id", pid),
     db.from("drying_yard_customer_material_funding").select("id,cluster_id,funding_mode,funded_pct,status,payment_trigger,settlement_days,approved_ceiling,updated_at").eq("project_id", pid),
     db.from("drying_yard_batch_release_audit").select("id,batch_id,action,decision,actor_name,actor_email,actor_role,reason,created_at").eq("project_id", pid).order("created_at", { ascending: false }).limit(200),
+    db.from("drying_yard_site_readiness_submissions").select("id,batch_id,site_id,submitted_at,candidate_ready").eq("project_id", pid).order("submitted_at", { ascending: false }),
+    db.from("drying_yard_site_readiness_reviews").select("submission_id,decision,reviewed_at").eq("project_id", pid),
   ]);
-  for (const r of [batchR, batchSiteR, siteR, frameworkR, bidR, fundingR, auditR]) if (r.error) throw r.error;
+  for (const r of [batchR, batchSiteR, siteR, frameworkR, bidR, fundingR, auditR, subR, revR]) if (r.error) throw r.error;
 
   const locationIds = Array.from(new Set((siteR.data || []).map((s: any) => s.location_id).filter(Boolean)));
   const locR = locationIds.length ? await db.from("core_locations").select("id,province,district,subdistrict,address").in("id", locationIds) : { data: [], error: null };
   if (locR.error) throw locR.error;
+
+  const reviewBySubmission = new Map((revR.data || []).map((x: any) => [x.submission_id, x]));
+  const latestSubmissionBySite = new Map<string, any>();
+  for (const x of subR.data || []) {
+    if (!latestSubmissionBySite.has(x.site_id)) latestSubmissionBySite.set(x.site_id, x);
+  }
 
   const siteMap = new Map((siteR.data || []).map((x: any) => [x.id, x]));
   const locMap = new Map((locR.data || []).map((x: any) => [x.id, x]));
@@ -102,7 +110,18 @@ async function buildOverview(db: any, pid: string, code: string, label: string) 
   for (const row of batchSiteR.data || []) {
     const site = siteMap.get(row.site_id) as any;
     if (!site) continue;
-    const item = { ...row, site_code: site.site_code, site_status: site.status, metadata: site.metadata, location: locMap.get(site.location_id) || null, ready: readiness(row) };
+    const latestSubmission = latestSubmissionBySite.get(row.site_id) || null;
+    const fieldReviewPending = Boolean(latestSubmission && !reviewBySubmission.has(latestSubmission.id));
+    const item = {
+      ...row,
+      site_code: site.site_code,
+      site_status: site.status,
+      metadata: site.metadata,
+      location: locMap.get(site.location_id) || null,
+      ready: readiness(row) && !fieldReviewPending,
+      field_review_pending: fieldReviewPending,
+      latest_field_submission_id: latestSubmission?.id || null,
+    };
     const list = sitesByBatch.get(row.batch_id) || [];
     list.push(item); sitesByBatch.set(row.batch_id, list);
   }
@@ -118,9 +137,10 @@ async function buildOverview(db: any, pid: string, code: string, label: string) 
   const confirmedStatuses = new Set(["approved", "active", "confirmed"]);
   const batches = (batchR.data || []).map((b: any) => {
     const sites = sitesByBatch.get(b.id) || [];
+    const pendingFieldReviews = sites.filter((x: any) => x.field_review_pending).length;
     const readySites = sites.filter((x: any) => x.ready).length;
     const confirmedVolume = sites.reduce((sum: number, x: any) => sum + (x.ready ? n(x.confirmed_concrete_m3) : 0), 0);
-    const sitePass = sites.length > 0 && readySites === sites.length;
+    const sitePass = sites.length > 0 && readySites === sites.length && pendingFieldReviews === 0;
     const framework: any = frameworkMap.get(b.cluster_id) || null;
     const primary: any = framework?.primary_bid_id ? bidMap.get(framework.primary_bid_id) || null : null;
     const backup: any = framework?.backup_bid_id ? bidMap.get(framework.backup_bid_id) || null : null;
@@ -148,6 +168,7 @@ async function buildOverview(db: any, pid: string, code: string, label: string) 
     const schedulePass = procurementPass && noticePass && leadTimePass && forecastPass && effectivePass;
     const blockers: string[] = [];
     if (!sitePass) blockers.push(`Site readiness ${readySites}/${sites.length}`);
+    if (pendingFieldReviews > 0) blockers.push(`Field readiness PM review pending ${pendingFieldReviews} site(s)`);
     if (!procurementPass) blockers.push("Framework/Primary/Backup ยังไม่ Active และ Confirmed");
     if (!capacityPass) blockers.push(`Supplier capacity ${weightedCapacity.toFixed(1)} < required ${requiredDaily.toFixed(1)} m³/day`);
     if (!fundingPass) blockers.push("Customer Funding ยังไม่ Approved/Active/Confirmed");
@@ -158,7 +179,7 @@ async function buildOverview(db: any, pid: string, code: string, label: string) 
     const releaseReady = sitePass && procurementPass && capacityPass && fundingPass && fin.gm_pass && fin.cash_pass && fin.commitment_pass && schedulePass;
     return {
       ...b, sites,
-      site_gate: { pass: sitePass, ready_sites: readySites, total_sites: sites.length, confirmed_volume_m3: confirmedVolume },
+      site_gate: { pass: sitePass, ready_sites: readySites, total_sites: sites.length, confirmed_volume_m3: confirmedVolume, pending_field_reviews: pendingFieldReviews },
       procurement_gate: { pass: procurementPass, framework, primary, backup },
       capacity_gate: { pass: capacityPass, weighted_capacity_m3_day: weightedCapacity, required_daily_m3: requiredDaily, volume_source: confirmedVolume > 0 ? "confirmed" : "planned", max_lead_time_days: leadDays },
       funding_gate: { pass: fundingPass, confirmed_funding_pct: confirmedFundingPct, funding },
@@ -178,7 +199,7 @@ async function buildOverview(db: any, pid: string, code: string, label: string) 
       funding_ready: batches.filter((x: any) => x.funding_gate.pass).length,
       total_sites: batches.reduce((sum: number, x: any) => sum + n(x.planned_site_count), 0),
     }, batches,
-    rule: "Site Readiness → Active Framework + Primary/Backup → Supplier Capacity/Lead Time → Confirmed Customer Funding → GM >=32% → Rolling Cash >= Safety Reserve → 4-week Commitment Coverage → Schedule/72h Call-off → Manual Batch Release. No automatic PO/DO or batch release.",
+    rule: "Verified Site Readiness with no pending field review → Active Framework + Primary/Backup → Supplier Capacity/Lead Time → Confirmed Customer Funding → GM >=32% → Rolling Cash >= Safety Reserve → 4-week Commitment Coverage → Schedule/72h Call-off → Manual Batch Release. No automatic PO/DO or batch release.",
   };
 }
 

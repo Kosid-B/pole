@@ -14,6 +14,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/projects",
     "/teams",
     "/field-reports",
+    "/field-readiness",
     "/finance",
     "/imports",
     "/drying-yard",
@@ -26,6 +27,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/projects",
     "/teams",
     "/field-reports",
+    "/field-readiness",
     "/finance",
     "/imports",
     "/drying-yard",
@@ -33,7 +35,7 @@ const routeAccess: Record<AppRole, string[]> = {
     "/pm",
     "/procurement",
   ],
-  FIELD_LEADER: ["/field-reports", "/drying-yard"],
+  FIELD_LEADER: ["/field-reports", "/field-readiness", "/drying-yard"],
 };
 
 const navItems: NavItem[] = [
@@ -72,6 +74,7 @@ const navItems: NavItem[] = [
   },
   { href: "/teams", label: "Teams", description: "Crew and leader management" },
   { href: "/field-reports", label: "Field Reports", description: "Daily execution updates" },
+  { href: "/field-readiness", label: "Field Readiness", description: "Site evidence • PM verification • Batch gate" },
   { href: "/finance", label: "Finance", description: "Costs, billing, and collections" },
   { href: "/imports", label: "Imports", description: "Spreadsheet and PDF review" },
 ];
