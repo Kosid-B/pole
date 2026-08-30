@@ -20,6 +20,7 @@ export function TeamTable({ teams }: TeamTableProps) {
         <thead className="bg-slate-950/50 text-xs uppercase tracking-[0.2em] text-sky-200/70">
           <tr>
             <th className="px-4 py-3 font-medium">Team</th>
+            <th className="px-4 py-3 font-medium">Type</th>
             <th className="px-4 py-3 font-medium">Project</th>
             <th className="px-4 py-3 font-medium">Leader</th>
             <th className="px-4 py-3 font-medium">Crew size</th>
@@ -30,6 +31,11 @@ export function TeamTable({ teams }: TeamTableProps) {
           {teams.map((team) => (
             <tr key={team.id} className="align-top">
               <td className="px-4 py-4 font-medium text-white">{team.name}</td>
+              <td className="px-4 py-4">
+                {team.teamType?.nameTh ?? (
+                  <span className="text-slate-400">Not set</span>
+                )}
+              </td>
               <td className="px-4 py-4">{team.projectName}</td>
               <td className="px-4 py-4">{team.leaderName}</td>
               <td className="px-4 py-4">{team.crewSize}</td>

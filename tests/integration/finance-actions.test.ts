@@ -5,8 +5,10 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pushTask3Schema } from "@/lib/task3-prisma-push";
 import { getTask3DatabaseRuntime } from "@/lib/task3-database-path";
+import { createPrismaClient } from "@/lib/db";
 import { createBillingRecord, createCostEntry } from "@/server/actions/finance";
 import { createProject } from "@/server/actions/projects";
+import { seedMasterData } from "../../prisma/seed-data";
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(currentDirectory, "../..");
@@ -17,7 +19,7 @@ const runtime = getTask3DatabaseRuntime({
 });
 
 describe("finance actions", () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     rmSync(runtime.filePath, { force: true });
 
     const result = pushTask3Schema({
@@ -36,6 +38,10 @@ describe("finance actions", () => {
           "Prisma db push failed for finance action test.",
       );
     }
+
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    await seedMasterData(prisma);
+    await prisma.$disconnect();
   });
 
   afterAll(() => {
@@ -43,6 +49,11 @@ describe("finance actions", () => {
   });
 
   it("creates a billing record and a cost entry for one project", async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    const materialCategory = await prisma.costCategory.findUniqueOrThrow({
+      where: { code: "MAT" },
+    });
+
     const project = await createProject(
       {
         name: "Southern Corridor",
@@ -72,7 +83,7 @@ describe("finance actions", () => {
     const costEntry = await createCostEntry(
       {
         projectId: project.id,
-        category: "Materials",
+        costCategoryId: materialCategory.id,
         description: "Concrete and rebar purchase",
         amount: 845_000,
         entryDate: "2026-05-21",
@@ -87,8 +98,11 @@ describe("finance actions", () => {
     expect(billingRecord.isDocumentComplete).toBe(true);
 
     expect(costEntry.projectId).toBe(project.id);
-    expect(costEntry.category).toBe("Materials");
+    expect(costEntry.category).toBe("วัสดุ");
     expect(costEntry.amount).toBe(845_000);
     expect(costEntry.valueType).toBe("ACTUAL");
+    expect(costEntry.costCategory?.code).toBe("MAT");
+
+    await prisma.$disconnect();
   });
 });

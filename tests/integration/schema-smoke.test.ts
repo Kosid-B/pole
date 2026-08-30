@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { createPrismaClient } from "@/lib/db";
 import { getTask3DatabaseRuntime } from "@/lib/task3-database-path";
 import { pushTask3Schema } from "@/lib/task3-prisma-push";
+import { seedMasterData, seedUsers } from "../../prisma/seed-data";
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(currentDirectory, "../..");
@@ -16,7 +17,7 @@ const runtime = getTask3DatabaseRuntime({
 });
 
 describe("schema smoke", () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     rmSync(runtime.filePath, { force: true });
 
     const result = pushTask3Schema({
@@ -31,35 +32,48 @@ describe("schema smoke", () => {
     if (result.status !== 0) {
       throw new Error(result.stderr || result.stdout || "Prisma db push failed for schema smoke test.");
     }
+
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    await seedUsers(prisma, "development");
+    await seedMasterData(prisma);
+    await prisma.$disconnect();
   });
 
   afterAll(() => {
     rmSync(runtime.filePath, { force: true });
   });
 
-  it("creates a project with one area and one team", async () => {
+  it("supports users and master-data relations", async () => {
     const prisma = createPrismaClient(runtime.databaseUrl);
 
-    const created = await prisma.project.create({
-      data: {
-        name: "Pilot Project",
-        contractValue: 1_000_000,
-        areas: {
-          create: [{ name: "Sisaket Cluster", province: "Sisaket" }],
-        },
-        teams: {
-          create: [{ name: "Team A", leaderName: "Somchai", crewSize: 6 }],
-        },
-      },
-      include: { areas: true, teams: true },
+    const admin = await prisma.user.findUnique({
+      where: { email: "admin@example.com" },
+    });
+    const teamTypes = await prisma.teamType.findMany({
+      orderBy: { sortOrder: "asc" },
+    });
+    const costCategories = await prisma.costCategory.findMany({
+      orderBy: { sortOrder: "asc" },
+    });
+    const equipment = await prisma.equipmentMaster.findMany({
+      orderBy: { code: "asc" },
     });
 
-    expect(created.areas).toHaveLength(1);
-    expect(created.teams).toHaveLength(1);
-
-    await prisma.project.delete({
-      where: { id: created.id },
-    });
+    expect(admin?.role).toBe("ADMIN");
+    expect(teamTypes.map((item) => item.code)).toEqual([
+      "INSTALL",
+      "FOUNDATION",
+      "INSPECTION",
+      "TRANSPORT",
+    ]);
+    expect(costCategories.map((item) => item.code)).toEqual([
+      "MAT",
+      "LAB",
+      "EQP",
+      "TRN",
+      "OTH",
+    ]);
+    expect(equipment.map((item) => item.code)).toEqual(["DRILL", "GENSET"]);
 
     await prisma.$disconnect();
   });

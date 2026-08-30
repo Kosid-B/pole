@@ -1,18 +1,21 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { verifyPassword } from "@/lib/passwords";
 import {
-  APP_ROLES,
   type AppRole,
   canAccessRoute,
   getDefaultDashboardRoute,
   normalizeRole,
 } from "@/lib/permissions";
 
+export const USER_ID_COOKIE_NAME = "pm-user-id";
 export const ROLE_COOKIE_NAME = "pm-role";
 export const EMAIL_COOKIE_NAME = "pm-email";
 
 export type AppSession = {
   user: {
+    id: string;
     email: string;
     name: string;
     role: AppRole;
@@ -48,7 +51,7 @@ export function getSafeRedirectTarget(
   return normalizedPath;
 }
 
-export function getSwitchRoleHref() {
+export function getChangeAccountHref() {
   const params = new URLSearchParams({
     redirectTo: "/sign-in",
   });
@@ -59,6 +62,7 @@ export function getSwitchRoleHref() {
 export async function clearSessionCookies() {
   const cookieStore = await cookies();
 
+  cookieStore.delete(USER_ID_COOKIE_NAME);
   cookieStore.delete(ROLE_COOKIE_NAME);
   cookieStore.delete(EMAIL_COOKIE_NAME);
 }
@@ -96,42 +100,48 @@ export function getSafeSignOutRedirectTarget(pathname: string | null | undefined
   return "/sign-in";
 }
 
-export function getRoleOptions() {
-  return APP_ROLES.map((role) => ({
-    value: role,
-    label: role.replace("_", " "),
-  }));
-}
+export async function verifyPasswordForUser(email: string, password: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await db.user.findUnique({
+    where: { email: normalizedEmail },
+  });
 
-export function getRoleFromEmail(email: string) {
-  const normalized = email.trim().toLowerCase();
-
-  if (normalized.includes("field")) {
-    return "FIELD_LEADER" satisfies AppRole;
+  if (!user || !user.isActive) {
+    return null;
   }
 
-  if (normalized.includes("exec")) {
-    return "EXECUTIVE" satisfies AppRole;
+  const matches = await verifyPassword(password, user.passwordHash);
+
+  if (!matches) {
+    return null;
   }
 
-  return "ADMIN" satisfies AppRole;
+  return user;
 }
 
 export async function getSession() {
   const cookieStore = await cookies();
+  const userId = cookieStore.get(USER_ID_COOKIE_NAME)?.value;
   const role = normalizeRole(cookieStore.get(ROLE_COOKIE_NAME)?.value);
 
-  if (!role) {
+  if (!userId || !role) {
     return null;
   }
 
-  const email = cookieStore.get(EMAIL_COOKIE_NAME)?.value ?? `${role.toLowerCase()}@example.com`;
+  const user = await db.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || !user.isActive || user.role !== role) {
+    return null;
+  }
 
   return {
     user: {
-      email,
-      name: email.split("@")[0].replace(/[._-]/g, " "),
-      role,
+      id: user.id,
+      email: user.email,
+      name: user.fullName,
+      role: user.role,
     },
   } satisfies AppSession;
 }
@@ -146,29 +156,37 @@ export async function requireSession() {
   return session;
 }
 
-export async function signInWithRole(formData: FormData) {
+export async function signInWithPassword(formData: FormData) {
   "use server";
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const requestedRole = String(formData.get("role") ?? "");
+  const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? "");
+  const user = await verifyPasswordForUser(email, password);
 
-  const role = normalizeRole(requestedRole) ?? getRoleFromEmail(email || "admin@example.com");
-  const safeEmail = email || `${role.toLowerCase()}@example.com`;
+  if (!user) {
+    redirect("/sign-in?error=invalid-credentials");
+  }
+
   const cookieStore = await cookies();
 
-  cookieStore.set(ROLE_COOKIE_NAME, role, {
+  cookieStore.set(USER_ID_COOKIE_NAME, user.id, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
   });
-  cookieStore.set(EMAIL_COOKIE_NAME, safeEmail, {
+  cookieStore.set(ROLE_COOKIE_NAME, user.role, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+  cookieStore.set(EMAIL_COOKIE_NAME, user.email, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
   });
 
-  redirect(sanitizeRedirect(redirectTo, role));
+  redirect(sanitizeRedirect(redirectTo, user.role));
 }
 
 export async function signOut() {

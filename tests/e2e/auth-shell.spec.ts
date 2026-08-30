@@ -7,7 +7,6 @@ test("admin can sign in and reach the protected dashboard shell", async ({
 
   await page.getByLabel("Email").fill("admin@example.com");
   await page.getByLabel("Password").fill("password");
-  await page.getByLabel("Role").selectOption("ADMIN");
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(
@@ -24,7 +23,6 @@ test("field leaders are redirected away from finance", async ({ page }) => {
 
   await page.getByLabel("Email").fill("field@example.com");
   await page.getByLabel("Password").fill("password");
-  await page.getByLabel("Role").selectOption("FIELD_LEADER");
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/field-reports$/);

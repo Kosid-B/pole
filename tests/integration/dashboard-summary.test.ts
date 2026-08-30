@@ -3,9 +3,11 @@
 import { rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createPrismaClient } from "@/lib/db";
 import { getTask3DatabaseRuntime } from "@/lib/task3-database-path";
 import { pushTask3Schema } from "@/lib/task3-prisma-push";
 import { getDashboardSummary } from "@/lib/dashboard/get-dashboard-summary";
+import { seedMasterData } from "@/../prisma/seed-data";
 import { createFieldReport } from "@/server/actions/field-reports";
 import { createBillingRecord, createCostEntry } from "@/server/actions/finance";
 import { markImportForReview } from "@/server/actions/imports";
@@ -42,6 +44,29 @@ describe("getDashboardSummary", () => {
     }
   });
 
+  beforeEach(async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+
+    try {
+      await prisma.fieldReportEquipment.deleteMany();
+      await prisma.fieldReportMaterial.deleteMany();
+      await prisma.fieldReport.deleteMany();
+      await prisma.billingRecord.deleteMany();
+      await prisma.costEntry.deleteMany();
+      await prisma.importJob.deleteMany();
+      await prisma.team.deleteMany();
+      await prisma.projectArea.deleteMany();
+      await prisma.project.deleteMany();
+      await prisma.equipmentMaster.deleteMany();
+      await prisma.unitOfMeasure.deleteMany();
+      await prisma.costCategory.deleteMany();
+      await prisma.teamType.deleteMany();
+      await seedMasterData(prisma);
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
+
   afterAll(() => {
     try {
       rmSync(runtime.filePath, { force: true });
@@ -51,6 +76,18 @@ describe("getDashboardSummary", () => {
   });
 
   it("returns progress and finance totals including actual versus estimated values", async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    const [teamType, materialCategory, transportCategory, poleUnit, machineUnit, drill] =
+      await Promise.all([
+        prisma.teamType.findUniqueOrThrow({ where: { code: "INSTALL" } }),
+        prisma.costCategory.findUniqueOrThrow({ where: { code: "MAT" } }),
+        prisma.costCategory.findUniqueOrThrow({ where: { code: "TRN" } }),
+        prisma.unitOfMeasure.findUniqueOrThrow({ where: { code: "POLE" } }),
+        prisma.unitOfMeasure.findUniqueOrThrow({ where: { code: "MACHINE" } }),
+        prisma.equipmentMaster.findUniqueOrThrow({ where: { code: "DRILL" } }),
+      ]);
+    await prisma.$disconnect();
+
     const project = await createProject(
       {
         name: "Western Backbone",
@@ -68,6 +105,7 @@ describe("getDashboardSummary", () => {
     const team = await createTeam(
       {
         projectId: project.id,
+        teamTypeId: teamType.id,
         name: "Crew Echo",
         leaderName: "Suda P.",
         crewSize: 6,
@@ -89,14 +127,15 @@ describe("getDashboardSummary", () => {
           {
             name: "Concrete pole",
             quantity: 125,
-            unit: "pcs",
+            unitId: poleUnit.id,
           },
         ],
         equipment: [
           {
-            name: "Boom truck",
+            equipmentMasterId: drill.id,
+            name: "เครื่องเจาะ",
             quantity: 1,
-            unit: "unit",
+            unitId: machineUnit.id,
           },
         ],
       },
@@ -118,7 +157,7 @@ describe("getDashboardSummary", () => {
     await createCostEntry(
       {
         projectId: project.id,
-        category: "Materials",
+        costCategoryId: materialCategory.id,
         description: "Estimated concrete demand",
         amount: 600_000,
         entryDate: "2026-05-21",
@@ -130,7 +169,7 @@ describe("getDashboardSummary", () => {
     await createCostEntry(
       {
         projectId: project.id,
-        category: "Logistics",
+        costCategoryId: transportCategory.id,
         description: "Actual transport spend",
         amount: 425_000,
         entryDate: "2026-05-21",

@@ -1,11 +1,16 @@
-import type { ProjectSummary } from "@/types/domain";
+import type { CostCategorySummary, ProjectSummary } from "@/types/domain";
 
 type CostEntryFormProps = {
   action: (formData: FormData) => Promise<void>;
   projects: ProjectSummary[];
+  costCategories: CostCategorySummary[];
 };
 
-export function CostEntryForm({ action, projects }: CostEntryFormProps) {
+export function CostEntryForm({
+  action,
+  projects,
+  costCategories,
+}: CostEntryFormProps) {
   return (
     <form action={action} className="space-y-5">
       <div className="space-y-2">
@@ -32,17 +37,25 @@ export function CostEntryForm({ action, projects }: CostEntryFormProps) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="category" className="text-sm font-medium text-slate-200">
+          <label htmlFor="costCategoryId" className="text-sm font-medium text-slate-200">
             Category
           </label>
-          <input
-            id="category"
-            name="category"
-            type="text"
+          <select
+            id="costCategoryId"
+            name="costCategoryId"
             required
+            defaultValue=""
             className="w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/60"
-            placeholder="Materials"
-          />
+          >
+            <option value="" disabled>
+              Select a cost category
+            </option>
+            {costCategories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.nameTh}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-2">

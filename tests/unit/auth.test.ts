@@ -1,8 +1,8 @@
 import {
-  getRoleFromEmail,
   getSafeRedirectTarget,
   getSafeSignOutRedirectTarget,
-  getSwitchRoleHref,
+  getChangeAccountHref,
+  verifyPasswordForUser,
 } from "@/lib/auth";
 import { getDefaultDashboardRoute } from "@/lib/permissions";
 
@@ -36,17 +36,24 @@ describe("getSafeRedirectTarget", () => {
   });
 });
 
-describe("getRoleFromEmail", () => {
-  it("derives a role from email hints for the mock session flow", () => {
-    expect(getRoleFromEmail("field@example.com")).toBe("FIELD_LEADER");
-    expect(getRoleFromEmail("exec@example.com")).toBe("EXECUTIVE");
-    expect(getRoleFromEmail("ops@example.com")).toBe("ADMIN");
+describe("database auth", () => {
+  it("accepts a seeded user with the correct password", async () => {
+    const user = await verifyPasswordForUser("admin@example.com", "password");
+
+    expect(user?.role).toBe("ADMIN");
+    expect(user?.email).toBe("admin@example.com");
+  });
+
+  it("rejects an inactive user", async () => {
+    const user = await verifyPasswordForUser("inactive@example.com", "password");
+
+    expect(user).toBeNull();
   });
 });
 
-describe("role switch helpers", () => {
+describe("account change helpers", () => {
   it("uses a dedicated sign-out handoff before showing the sign-in screen", () => {
-    expect(getSwitchRoleHref()).toBe("/sign-out?redirectTo=%2Fsign-in");
+    expect(getChangeAccountHref()).toBe("/sign-out?redirectTo=%2Fsign-in");
   });
 
   it("keeps sign-out redirects inside the app", () => {

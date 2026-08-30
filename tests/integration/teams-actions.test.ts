@@ -5,8 +5,10 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pushTask3Schema } from "@/lib/task3-prisma-push";
 import { getTask3DatabaseRuntime } from "@/lib/task3-database-path";
+import { createPrismaClient } from "@/lib/db";
 import { createProject } from "@/server/actions/projects";
 import { createTeam } from "@/server/actions/teams";
+import { seedMasterData } from "../../prisma/seed-data";
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(currentDirectory, "../..");
@@ -17,7 +19,7 @@ const runtime = getTask3DatabaseRuntime({
 });
 
 describe("createTeam", () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     rmSync(runtime.filePath, { force: true });
 
     const result = pushTask3Schema({
@@ -36,6 +38,10 @@ describe("createTeam", () => {
           "Prisma db push failed for teams action test.",
       );
     }
+
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    await seedMasterData(prisma);
+    await prisma.$disconnect();
   });
 
   afterAll(() => {
@@ -43,6 +49,11 @@ describe("createTeam", () => {
   });
 
   it("creates a team attached to a project", async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    const installTeamType = await prisma.teamType.findUniqueOrThrow({
+      where: { code: "INSTALL" },
+    });
+
     const project = await createProject(
       {
         name: "Northern Expansion",
@@ -60,6 +71,7 @@ describe("createTeam", () => {
     const team = await createTeam(
       {
         projectId: project.id,
+        teamTypeId: installTeamType.id,
         name: "Tower Crew Alpha",
         leaderName: "Anan S.",
         crewSize: 8,
@@ -73,5 +85,8 @@ describe("createTeam", () => {
     expect(team.leaderName).toBe("Anan S.");
     expect(team.crewSize).toBe(8);
     expect(team.specialization).toBe("Pole installation");
+    expect(team.teamType?.code).toBe("INSTALL");
+
+    await prisma.$disconnect();
   });
 });

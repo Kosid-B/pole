@@ -12,7 +12,11 @@ function collectLineItems(formData: FormData, prefix: "materials" | "equipment")
   const lineItems = new Map<number, Record<string, FormDataEntryValue | null>>();
 
   for (const [key, value] of formData.entries()) {
-    const match = key.match(new RegExp(`^${prefix}\\.(\\d+)\\.(name|quantity|unit)$`));
+    const match = key.match(
+      new RegExp(
+        `^${prefix}\\.(\\d+)\\.(equipmentMasterId|name|quantity|unit|unitId)$`,
+      ),
+    );
 
     if (!match) {
       continue;
@@ -28,11 +32,16 @@ function collectLineItems(formData: FormData, prefix: "materials" | "equipment")
   return Array.from(lineItems.entries())
     .sort(([left], [right]) => left - right)
     .map(([, item]) => ({
+      equipmentMasterId: item.equipmentMasterId,
       name: item.name,
       quantity: item.quantity,
+      unitId: item.unitId,
       unit: item.unit,
     }))
-    .filter((item) => item.name || item.quantity || item.unit);
+    .filter(
+      (item) =>
+        item.equipmentMasterId || item.name || item.quantity || item.unitId || item.unit,
+    );
 }
 
 function parseFieldReportFormData(formData: FormData): CreateFieldReportInput {
@@ -57,7 +66,17 @@ export async function createFieldReport(
   const prisma = databaseUrl ? createPrismaClient(databaseUrl) : db;
 
   try {
-    const [area, team] = await Promise.all([
+    const materialUnitIds = data.materials
+      .map((item) => item.unitId?.trim())
+      .filter((value): value is string => Boolean(value));
+    const equipmentUnitIds = data.equipment
+      .map((item) => item.unitId?.trim())
+      .filter((value): value is string => Boolean(value));
+    const equipmentMasterIds = data.equipment
+      .map((item) => item.equipmentMasterId?.trim())
+      .filter((value): value is string => Boolean(value));
+
+    const [area, team, units, equipmentMasters] = await Promise.all([
       prisma.projectArea.findUnique({
         where: {
           id: data.areaId,
@@ -74,6 +93,20 @@ export async function createFieldReport(
           projectId: true,
         },
       }),
+      prisma.unitOfMeasure.findMany({
+        where: {
+          id: {
+            in: Array.from(new Set([...materialUnitIds, ...equipmentUnitIds])),
+          },
+        },
+      }),
+      prisma.equipmentMaster.findMany({
+        where: {
+          id: {
+            in: Array.from(new Set(equipmentMasterIds)),
+          },
+        },
+      }),
     ]);
 
     if (!area || area.projectId !== data.projectId) {
@@ -83,6 +116,11 @@ export async function createFieldReport(
     if (!team || team.projectId !== data.projectId) {
       throw new Error("Selected team does not belong to the chosen project.");
     }
+
+    const unitMap = new Map(units.map((unit) => [unit.id, unit]));
+    const equipmentMasterMap = new Map(
+      equipmentMasters.map((item) => [item.id, item]),
+    );
 
     const report = await prisma.fieldReport.create({
       data: {
@@ -94,18 +132,44 @@ export async function createFieldReport(
         manpowerCount: data.manpowerCount,
         issues: data.issues,
         materials: {
-          create: data.materials.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-          })),
+          create: data.materials.map((item) => {
+            const unit = item.unitId ? unitMap.get(item.unitId) : null;
+
+            if (item.unitId && !unit) {
+              throw new Error("Selected material unit is no longer available.");
+            }
+
+            return {
+              name: item.name,
+              quantity: item.quantity,
+              unit: unit?.symbol ?? item.unit ?? "",
+              unitId: unit?.id ?? null,
+            };
+          }),
         },
         equipment: {
-          create: data.equipment.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-          })),
+          create: data.equipment.map((item) => {
+            const unit = item.unitId ? unitMap.get(item.unitId) : null;
+            const equipmentMaster = item.equipmentMasterId
+              ? equipmentMasterMap.get(item.equipmentMasterId)
+              : null;
+
+            if (item.unitId && !unit) {
+              throw new Error("Selected equipment unit is no longer available.");
+            }
+
+            if (item.equipmentMasterId && !equipmentMaster) {
+              throw new Error("Selected equipment is no longer available.");
+            }
+
+            return {
+              name: item.name,
+              quantity: item.quantity,
+              unit: unit?.symbol ?? item.unit ?? "",
+              unitId: unit?.id ?? null,
+              equipmentMasterId: equipmentMaster?.id ?? null,
+            };
+          }),
         },
       },
       include: {
@@ -113,11 +177,18 @@ export async function createFieldReport(
         area: true,
         team: true,
         materials: {
+          include: {
+            unitRef: true,
+          },
           orderBy: {
             createdAt: "asc",
           },
         },
         equipment: {
+          include: {
+            unitRef: true,
+            equipmentMaster: true,
+          },
           orderBy: {
             createdAt: "asc",
           },

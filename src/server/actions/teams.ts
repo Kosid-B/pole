@@ -8,6 +8,7 @@ import { toTeamSummary } from "@/server/queries/teams";
 function parseTeamFormData(formData: FormData): CreateTeamInput {
   return createTeamSchema.parse({
     projectId: formData.get("projectId"),
+    teamTypeId: formData.get("teamTypeId"),
     name: formData.get("name"),
     leaderName: formData.get("leaderName"),
     crewSize: formData.get("crewSize"),
@@ -26,6 +27,7 @@ export async function createTeam(
     const team = await prisma.team.create({
       data: {
         projectId: data.projectId,
+        teamTypeId: data.teamTypeId,
         name: data.name,
         leaderName: data.leaderName,
         crewSize: data.crewSize,
@@ -33,6 +35,7 @@ export async function createTeam(
       },
       include: {
         project: true,
+        teamType: true,
       },
     });
 

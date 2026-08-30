@@ -5,6 +5,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pushTask3Schema } from "@/lib/task3-prisma-push";
 import { getTask3DatabaseRuntime } from "@/lib/task3-database-path";
+import { createPrismaClient } from "@/lib/db";
+import { seedMasterData } from "@/../prisma/seed-data";
 import { createFieldReport } from "@/server/actions/field-reports";
 import { createProject } from "@/server/actions/projects";
 import { createTeam } from "@/server/actions/teams";
@@ -39,11 +41,40 @@ describe("createFieldReport", () => {
     }
   });
 
+  beforeEach(async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+
+    try {
+      await prisma.fieldReportEquipment.deleteMany();
+      await prisma.fieldReportMaterial.deleteMany();
+      await prisma.fieldReport.deleteMany();
+      await prisma.team.deleteMany();
+      await prisma.projectArea.deleteMany();
+      await prisma.project.deleteMany();
+      await prisma.equipmentMaster.deleteMany();
+      await prisma.unitOfMeasure.deleteMany();
+      await prisma.costCategory.deleteMany();
+      await prisma.teamType.deleteMany();
+      await seedMasterData(prisma);
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
+
   afterAll(() => {
     rmSync(runtime.filePath, { force: true });
   });
 
   it("creates a report with one material and one equipment entry", async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+    const [teamType, machineUnit, poleUnit, drill] = await Promise.all([
+      prisma.teamType.findUniqueOrThrow({ where: { code: "INSTALL" } }),
+      prisma.unitOfMeasure.findUniqueOrThrow({ where: { code: "MACHINE" } }),
+      prisma.unitOfMeasure.findUniqueOrThrow({ where: { code: "POLE" } }),
+      prisma.equipmentMaster.findUniqueOrThrow({ where: { code: "DRILL" } }),
+    ]);
+    await prisma.$disconnect();
+
     const project = await createProject(
       {
         name: "Eastern Grid",
@@ -61,6 +92,7 @@ describe("createFieldReport", () => {
     const team = await createTeam(
       {
         projectId: project.id,
+        teamTypeId: teamType.id,
         name: "Crew Delta",
         leaderName: "Narin P.",
         crewSize: 7,
@@ -82,14 +114,15 @@ describe("createFieldReport", () => {
           {
             name: "Concrete pole",
             quantity: 18,
-            unit: "pcs",
+            unitId: poleUnit.id,
           },
         ],
         equipment: [
           {
-            name: "Boom truck",
+            equipmentMasterId: drill.id,
+            name: "เครื่องเจาะ",
             quantity: 1,
-            unit: "unit",
+            unitId: machineUnit.id,
           },
         ],
       },
@@ -102,7 +135,9 @@ describe("createFieldReport", () => {
     expect(report.completedUnits).toBe(18);
     expect(report.materials).toHaveLength(1);
     expect(report.materials[0].name).toBe("Concrete pole");
+    expect(report.materials[0].unitRef?.code).toBe("POLE");
     expect(report.equipment).toHaveLength(1);
-    expect(report.equipment[0].name).toBe("Boom truck");
+    expect(report.equipment[0].equipmentMaster?.code).toBe("DRILL");
+    expect(report.equipment[0].unitRef?.code).toBe("MACHINE");
   });
 });

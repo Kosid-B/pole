@@ -1,14 +1,16 @@
-import { signInWithRole, getRoleOptions } from "@/lib/auth";
+import { signInWithPassword } from "@/lib/auth";
 
 type SignInPageProps = {
   searchParams?: Promise<{
     redirectTo?: string;
+    error?: string;
   }>;
 };
 
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = (await searchParams) ?? {};
   const redirectTo = params.redirectTo ?? "/";
+  const error = params.error ?? "";
 
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -20,14 +22,19 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           Sign in to your role-aware workspace
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300">
-          This MVP keeps authentication intentionally lightweight for now. Use a
-          role and email identity to enter the protected dashboard shell.
+          Sign in with a real project account to enter the protected dashboard shell.
         </p>
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 text-slate-100 shadow-2xl shadow-slate-950/30 backdrop-blur">
-        <form action={signInWithRole} className="space-y-5">
+        <form action={signInWithPassword} className="space-y-5">
           <input type="hidden" name="redirectTo" value={redirectTo} />
+
+          {error === "invalid-credentials" ? (
+            <div className="rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">
+              Invalid email or password. Please try again.
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-100" htmlFor="email">
@@ -55,24 +62,6 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
               defaultValue="password"
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-300/50"
             />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-100" htmlFor="role">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              defaultValue="ADMIN"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/50"
-            >
-              {getRoleOptions().map((role) => (
-                <option key={role.value} value={role.value} className="text-slate-950">
-                  {role.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           <button

@@ -16,8 +16,9 @@ export function ImportReviewTable({ importJobs }: ImportReviewTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-      <table className="min-w-full divide-y divide-white/10 text-left text-sm text-slate-200">
+    <div className="overflow-hidden rounded-[1.75rem] border border-white/8 bg-white/[0.04]">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-white/8 text-left text-sm text-slate-200">
         <thead className="bg-slate-950/50 text-xs uppercase tracking-[0.2em] text-sky-200/70">
           <tr>
             <th className="px-4 py-3 font-medium">File</th>
@@ -45,7 +46,8 @@ export function ImportReviewTable({ importJobs }: ImportReviewTableProps) {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }
