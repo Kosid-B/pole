@@ -68,6 +68,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
           <button
             type="submit"
+            aria-label="Sign in"
             className="min-h-12 w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-100"
           >
             เข้าสู่ระบบ
