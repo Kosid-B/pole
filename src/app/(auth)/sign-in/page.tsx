@@ -1,5 +1,3 @@
-import { signInWithPassword } from "@/lib/auth";
-
 type SignInPageProps = {
   searchParams?: Promise<{
     redirectTo?: string;
@@ -27,7 +25,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 text-slate-100 shadow-2xl shadow-slate-950/30 backdrop-blur">
-        <form action={signInWithPassword} className="space-y-5">
+        <form action="/api/auth/sign-in" method="post" className="space-y-5">
           <input type="hidden" name="redirectTo" value={redirectTo} />
 
           {error === "invalid-credentials" ? (
