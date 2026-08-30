@@ -117,6 +117,37 @@ export function getRoleFromEmail(email: string) {
   return "ADMIN" satisfies AppRole;
 }
 
+function getExplicitRoleFromEmail(email: string): AppRole | null {
+  const normalized = email.trim().toLowerCase();
+
+  if (normalized.includes("field")) {
+    return "FIELD_LEADER";
+  }
+
+  if (normalized.includes("exec")) {
+    return "EXECUTIVE";
+  }
+
+  if (normalized.includes("admin")) {
+    return "ADMIN";
+  }
+
+  return null;
+}
+
+export function resolveSignInRole(email: string, requestedRole: string) {
+  const identityRole = getExplicitRoleFromEmail(email);
+
+  if (identityRole) {
+    return identityRole;
+  }
+
+  return (
+    normalizeRole(requestedRole) ??
+    getRoleFromEmail(email || "admin@example.com")
+  );
+}
+
 export async function getSession() {
   const cookieStore = await cookies();
   const role = normalizeRole(cookieStore.get(ROLE_COOKIE_NAME)?.value);
@@ -153,7 +184,7 @@ export async function signInWithRole(formData: FormData) {
   const requestedRole = String(formData.get("role") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? "");
 
-  const role = normalizeRole(requestedRole) ?? getRoleFromEmail(email || "admin@example.com");
+  const role = resolveSignInRole(email, requestedRole);
   const safeEmail = email || `${role.toLowerCase()}@example.com`;
   const cookieStore = await cookies();
 
