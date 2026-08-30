@@ -80,6 +80,11 @@ const navItems: NavItem[] = [
     description: "Released Batch • Supplier • DO • Actual quantity",
   },
   {
+    href: "/pm/invoices",
+    label: "Supplier Invoice",
+    description: "3-Way Match • Verified Actual • Manual eligibility",
+  },
+  {
     href: "/procurement",
     label: "Procurement",
     description: "Cluster • RFQ A/B/C • Framework • Customer funding",
