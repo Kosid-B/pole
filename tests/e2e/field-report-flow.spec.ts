@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
+import { openAsSeededRole } from "./helpers/session";
 
 test("field leader can create a field report with material and equipment usage", async ({
   page,
 }) => {
-  await page.goto("/sign-in?redirectTo=/field-reports/new");
-
-  await page.getByLabel("Email").fill("field@example.com");
-  await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await openAsSeededRole(
+    page,
+    "field@example.com",
+    "FIELD_LEADER",
+    "/field-reports/new",
+  );
 
   await expect(
     page.getByRole("heading", { name: "Create a field report" }),
@@ -31,9 +33,12 @@ test("field leader can create a field report with material and equipment usage",
   await page.getByLabel("Unit", { exact: true }).nth(1).selectOption({
     label: "เครื่อง (เครื่อง)",
   });
-  await page.getByRole("button", { name: "Save field report" }).click();
 
-  await expect(page).toHaveURL(/\/field-reports$/);
+  await Promise.all([
+    page.waitForURL(/\/field-reports$/, { timeout: 30_000 }),
+    page.getByRole("button", { name: "Save field report" }).click(),
+  ]);
+
   await expect(
     page.getByRole("heading", { name: "Daily field reporting" }),
   ).toBeVisible();

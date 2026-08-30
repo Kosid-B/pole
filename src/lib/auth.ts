@@ -176,10 +176,14 @@ export async function signInWithPassword(formData: FormData) {
   cookieStore.delete(ROLE_COOKIE_NAME);
   cookieStore.delete(EMAIL_COOKIE_NAME);
 
+  // Production deployments stay Secure. Playwright explicitly opts into HTTP-localhost
+  // mode so the real sign-in flow can be exercised without silently dropping cookies.
+  const secureCookie =
+    process.env.NODE_ENV === "production" && process.env.E2E_HTTP !== "1";
   const cookieOptions = {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie,
     path: "/",
   };
 

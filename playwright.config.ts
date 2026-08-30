@@ -19,6 +19,10 @@ export default defineConfig({
     url: "http://localhost:3000/sign-in",
     reuseExistingServer: false,
     timeout: 120000,
+    env: {
+      ...process.env,
+      E2E_HTTP: "1",
+    },
   },
   projects: [
     {

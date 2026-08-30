@@ -1,11 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { openAsSeededRole } from "./helpers/session";
 
 test("admin happy path touches each MVP module", async ({ page }) => {
-  await page.goto("/sign-in");
-
-  await page.getByLabel("Email").fill("admin@example.com");
-  await page.getByLabel("Password").fill("password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await openAsSeededRole(page, "admin@example.com", "ADMIN", "/");
 
   await expect(
     page.getByRole("heading", { name: "Executive portfolio dashboard" }),
