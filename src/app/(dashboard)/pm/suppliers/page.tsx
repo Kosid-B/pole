@@ -27,16 +27,65 @@ function materialLabel(value: string) {
 }
 
 function materialTone(value: string) {
-  if (value === "CONCRETE_240KSC") return "border-sky-300/20 bg-sky-400/10 text-sky-200";
-  if (value === "AGGREGATE") return "border-amber-300/20 bg-amber-400/10 text-amber-100";
+  if (value === "CONCRETE_240KSC") {
+    return "border-sky-300/20 bg-sky-400/10 text-sky-200";
+  }
+  if (value === "AGGREGATE") {
+    return "border-amber-300/20 bg-amber-400/10 text-amber-100";
+  }
   return "border-violet-300/20 bg-violet-400/10 text-violet-100";
+}
+
+function evidenceMeta(sourceKind: string) {
+  if (sourceKind === "official_website") {
+    return {
+      label: "OFFICIAL SOURCE",
+      tone: "border-emerald-300/20 bg-emerald-400/10 text-emerald-200",
+    };
+  }
+  if (sourceKind === "structured_business") {
+    return {
+      label: "BUSINESS VERIFIED",
+      tone: "border-sky-300/20 bg-sky-400/10 text-sky-200",
+    };
+  }
+  if (sourceKind === "public_registry") {
+    return {
+      label: "PUBLIC REGISTRY",
+      tone: "border-indigo-300/20 bg-indigo-400/10 text-indigo-100",
+    };
+  }
+  if (sourceKind === "public_directory") {
+    return {
+      label: "PUBLIC DIRECTORY",
+      tone: "border-amber-300/20 bg-amber-400/10 text-amber-100",
+    };
+  }
+  return {
+    label: "PUBLIC LEAD",
+    tone: "border-white/10 bg-white/5 text-slate-300",
+  };
+}
+
+function verifiedDate(value: string | null) {
+  if (!value) return "ยังไม่บันทึกวันตรวจ";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "วันที่ตรวจไม่ถูกต้อง";
+  return new Intl.DateTimeFormat("th-TH", {
+    timeZone: "Asia/Bangkok",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 function safeHttpUrl(value: string | null) {
   if (!value) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString()
+      : null;
   } catch {
     return null;
   }
@@ -49,21 +98,42 @@ function telHref(phone: string | null) {
   return safe ? `tel:${safe}` : null;
 }
 
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white/5 p-3">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
 function SupplierCard({ supplier }: { supplier: SupplierCandidate }) {
   const sourceUrl = safeHttpUrl(supplier.source_url || supplier.website);
   const phoneUrl = telHref(supplier.phone);
   const missing = supplier.rfq_missing || [];
+  const evidence = evidenceMeta(supplier.source_kind);
 
   return (
     <article className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${materialTone(supplier.material_group)}`}>
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${materialTone(
+                supplier.material_group,
+              )}`}
+            >
               {materialLabel(supplier.material_group)}
             </span>
             <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
               Rank {supplier.priority_rank}
+            </span>
+            <span
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${evidence.tone}`}
+            >
+              {evidence.label}
             </span>
             <span
               className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
@@ -72,10 +142,13 @@ function SupplierCard({ supplier }: { supplier: SupplierCandidate }) {
                   : "border-amber-300/20 bg-amber-400/10 text-amber-100"
               }`}
             >
-              {supplier.award_ready ? "RFQ READY" : "CANDIDATE / UNCONFIRMED"}
+              {supplier.award_ready ? "AWARD READY" : "COMMERCIAL UNCONFIRMED"}
             </span>
           </div>
-          <h3 className="mt-3 text-lg font-semibold text-white">{supplier.supplier_name}</h3>
+
+          <h3 className="mt-3 text-lg font-semibold text-white">
+            {supplier.supplier_name}
+          </h3>
           <p className="mt-1 text-sm leading-6 text-slate-400">
             {supplier.plant_location || "ยังไม่ยืนยัน Plant / Yard"}
           </p>
@@ -84,9 +157,12 @@ function SupplierCard({ supplier }: { supplier: SupplierCandidate }) {
               พื้นที่ที่ต้องสอบถาม: {supplier.service_provinces.join(" • ")}
             </p>
           ) : null}
+          <p className="mt-2 text-[11px] text-slate-500">
+            Contact evidence: {evidence.label} • ตรวจล่าสุด {verifiedDate(supplier.contact_verified_at)}
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:max-w-[320px] sm:justify-end">
+        <div className="flex flex-wrap gap-2 sm:max-w-[360px] sm:justify-end">
           {phoneUrl ? (
             <a
               href={phoneUrl}
@@ -110,7 +186,7 @@ function SupplierCard({ supplier }: { supplier: SupplierCandidate }) {
               rel="noreferrer"
               className="flex min-h-11 items-center justify-center rounded-xl border border-sky-300/20 bg-sky-400/10 px-3 text-xs font-medium text-sky-100"
             >
-              Source ↗
+              ดูหลักฐาน ↗
             </a>
           ) : null}
         </div>
@@ -122,44 +198,47 @@ function SupplierCard({ supplier }: { supplier: SupplierCandidate }) {
         </p>
       ) : null}
 
-      <div className="mt-4 grid gap-2 grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Credit</p>
-          <p className="mt-1 text-sm font-semibold text-white">
-            {supplier.credit_days == null ? "?" : `${supplier.credit_days} วัน`}
-          </p>
-        </div>
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Deposit</p>
-          <p className="mt-1 text-sm font-semibold text-white">
-            {supplier.deposit_pct == null ? "?" : `${supplier.deposit_pct}%`}
-          </p>
-        </div>
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Capacity</p>
-          <p className="mt-1 text-sm font-semibold text-white">
-            {supplier.capacity_per_day == null ? "?" : number(supplier.capacity_per_day, 1)}
-          </p>
-        </div>
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Lead Time</p>
-          <p className="mt-1 text-sm font-semibold text-white">
-            {supplier.lead_time_days == null ? "?" : `${supplier.lead_time_days} วัน`}
-          </p>
-        </div>
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Distance</p>
-          <p className="mt-1 text-sm font-semibold text-white">
-            {supplier.distance_km == null ? "?" : `${number(supplier.distance_km, 1)} km`}
-          </p>
-        </div>
-        <div className="rounded-xl bg-white/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Base / Unit</p>
-          <p className="mt-1 text-sm font-semibold text-white">{baht(supplier.quoted_base_rate)}</p>
-        </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+        <Metric
+          label="Credit"
+          value={supplier.credit_days == null ? "?" : `${supplier.credit_days} วัน`}
+        />
+        <Metric
+          label="Deposit"
+          value={supplier.deposit_pct == null ? "?" : `${supplier.deposit_pct}%`}
+        />
+        <Metric
+          label="Capacity"
+          value={
+            supplier.capacity_per_day == null
+              ? "?"
+              : number(supplier.capacity_per_day, 1)
+          }
+        />
+        <Metric
+          label="Lead Time"
+          value={
+            supplier.lead_time_days == null
+              ? "?"
+              : `${supplier.lead_time_days} วัน`
+          }
+        />
+        <Metric
+          label="Distance"
+          value={
+            supplier.distance_km == null
+              ? "?"
+              : `${number(supplier.distance_km, 1)} km`
+          }
+        />
+        <Metric label="Base / Unit" value={baht(supplier.quoted_base_rate)} />
         <div className="rounded-xl border border-emerald-300/10 bg-emerald-400/5 p-3">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-emerald-300/70">Delivered Cost</p>
-          <p className="mt-1 text-sm font-semibold text-emerald-200">{baht(supplier.total_delivered_cost)}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-emerald-300/70">
+            Delivered Cost
+          </p>
+          <p className="mt-1 text-sm font-semibold text-emerald-200">
+            {baht(supplier.total_delivered_cost)}
+          </p>
         </div>
       </div>
 
@@ -168,7 +247,10 @@ function SupplierCard({ supplier }: { supplier: SupplierCandidate }) {
           <p className="text-xs font-semibold text-amber-100">RFQ ยังขาด</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {missing.map((item) => (
-              <span key={item} className="rounded-lg border border-amber-200/10 bg-slate-950/20 px-2 py-1 text-[11px] text-amber-50/90">
+              <span
+                key={item}
+                className="rounded-lg border border-amber-200/10 bg-slate-950/20 px-2 py-1 text-[11px] text-amber-50/90"
+              >
                 {item}
               </span>
             ))}
@@ -190,8 +272,12 @@ export default async function SupplierSourcingPage() {
     return (
       <section className="space-y-6">
         <div>
-          <p className="text-sm font-medium text-emerald-300">PM / Supplier Sourcing</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Supplier Sourcing ยังเชื่อมข้อมูลไม่ได้</h1>
+          <p className="text-sm font-medium text-emerald-300">
+            PM / Supplier Sourcing
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">
+            Supplier Sourcing ยังเชื่อมข้อมูลไม่ได้
+          </h1>
         </div>
         <div className="rounded-3xl border border-amber-300/20 bg-amber-300/10 p-6 text-amber-50">
           {result.error}
@@ -202,46 +288,74 @@ export default async function SupplierSourcingPage() {
 
   const data = result.data;
   const s = data.summary;
+  const candidates = data.zones.flatMap((zone) => zone.candidates);
+  const officialSources = candidates.filter(
+    (supplier) => supplier.source_kind === "official_website",
+  ).length;
 
   return (
     <section className="space-y-7 pb-10">
       <nav aria-label="PM supplier navigation" className="flex flex-wrap gap-2">
-        <Link href="/pm" className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-medium text-white">
+        <Link
+          href="/pm"
+          className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-medium text-white"
+        >
           ← PM Control Center
         </Link>
-        <Link href="/procurement" className="flex min-h-11 items-center rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 text-sm font-medium text-emerald-100">
+        <Link
+          href="/pm/suppliers/rfq"
+          className="flex min-h-11 items-center rounded-xl bg-emerald-400 px-4 text-sm font-semibold text-slate-950"
+        >
+          เปิด RFQ / TDC Console
+        </Link>
+        <Link
+          href="/procurement"
+          className="flex min-h-11 items-center rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 text-sm font-medium text-emerald-100"
+        >
           Procurement Control
         </Link>
       </nav>
 
       <header className="rounded-[2rem] border border-emerald-300/15 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-950 p-6 shadow-2xl shadow-slate-950/20 sm:p-8">
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">PM INTERNAL</span>
-          <span className="rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-100">SUPPLIER SEARCH</span>
-          <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-100">GM FLOOR 32%</span>
+          <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+            PM INTERNAL
+          </span>
+          <span className="rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-100">
+            CONTACT EVIDENCE
+          </span>
+          <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-100">
+            GM FLOOR 32%
+          </span>
         </div>
         <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           Supplier Sourcing / Procurement Zones
         </h1>
         <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300 sm:text-base">
-          Public sourcing → RFQ → Confirm Terms → Total Delivered Cost → GM & Cash Gate → Primary / Backup Award
-          โดยไม่ให้ราคาเว็บหรือชื่อแบรนด์กลายเป็น Award อัตโนมัติ
+          Public sourcing → Contact Evidence → RFQ → Confirm Terms → Total Delivered
+          Cost → GM & Cash Gate → Primary / Backup Award โดย Web lead ไม่ถูกยกระดับเป็น
+          Approved Supplier อัตโนมัติ
         </p>
       </header>
 
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
         {[
           ["Zones", s.zones],
           ["Candidates", s.candidates],
-          ["Public contacts", s.public_contacts],
+          ["Official sources", officialSources],
           ["Commercial confirmed", s.confirmed],
           ["Award ready", s.award_ready],
           ["Concrete", s.concrete_candidates],
           ["Aggregate", s.aggregate_candidates],
           ["Steel", s.steel_candidates],
         ].map(([label, value]) => (
-          <article key={String(label)} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-[10px] uppercase tracking-[0.13em] text-slate-500">{label}</p>
+          <article
+            key={String(label)}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4"
+          >
+            <p className="text-[10px] uppercase tracking-[0.13em] text-slate-500">
+              {label}
+            </p>
             <p className="mt-2 text-xl font-semibold text-white">{String(value)}</p>
           </article>
         ))}
@@ -251,45 +365,74 @@ export default async function SupplierSourcingPage() {
         <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4">
           <p className="text-xs font-semibold text-emerald-200">GM GATE</p>
           <p className="mt-2 text-xl font-semibold text-white">≥ 32.00%</p>
-          <p className="mt-1 text-xs leading-5 text-emerald-50/70">หลัง Supplier / freight / waste / PO decision</p>
+          <p className="mt-1 text-xs leading-5 text-emerald-50/70">
+            หลัง Supplier / freight / waste / PO decision
+          </p>
         </div>
         <div className="rounded-2xl border border-sky-300/20 bg-sky-400/10 p-4">
           <p className="text-xs font-semibold text-sky-200">CASH GATE</p>
           <p className="mt-2 text-xl font-semibold text-white">≥ Safety Reserve</p>
-          <p className="mt-1 text-xs leading-5 text-sky-50/70">ตลอด Rolling Cash-flow forecast</p>
+          <p className="mt-1 text-xs leading-5 text-sky-50/70">
+            ตลอด Rolling Cash-flow forecast
+          </p>
         </div>
         <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 p-4">
           <p className="text-xs font-semibold text-amber-100">CURRENT TERMS</p>
-          <p className="mt-2 text-xl font-semibold text-white">0 Confirmed</p>
-          <p className="mt-1 text-xs leading-5 text-amber-50/70">ต้อง RFQ ก่อนใช้ Credit / Deposit / Capacity</p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            {s.confirmed} Confirmed
+          </p>
+          <p className="mt-1 text-xs leading-5 text-amber-50/70">
+            Credit / Deposit / Capacity ใช้ได้เมื่อ RFQ ยืนยันแล้วเท่านั้น
+          </p>
         </div>
         <div className="rounded-2xl border border-violet-300/20 bg-violet-400/10 p-4">
           <p className="text-xs font-semibold text-violet-100">AWARD BASIS</p>
-          <p className="mt-2 text-xl font-semibold text-white">Total Delivered Cost</p>
-          <p className="mt-1 text-xs leading-5 text-violet-50/70">ไม่ใช้ Base Rate อย่างเดียว</p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            Total Delivered Cost
+          </p>
+          <p className="mt-1 text-xs leading-5 text-violet-50/70">
+            ไม่ใช้ Base Rate หรือชื่อแบรนด์อย่างเดียว
+          </p>
         </div>
       </section>
 
       <div className="space-y-4">
         {data.zones.map((zone, index) => (
-          <details key={zone.zone_code} open={index < 3} className="group rounded-[1.7rem] border border-white/10 bg-white/5">
+          <details
+            key={zone.zone_code}
+            open={index < 3}
+            className="group rounded-[1.7rem] border border-white/10 bg-white/5"
+          >
             <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 sm:px-6">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-emerald-400 px-2.5 py-1 text-[11px] font-bold text-slate-950">{zone.zone_code}</span>
-                  <span className="text-xs text-slate-400">Priority {zone.sourcing_priority}</span>
+                  <span className="rounded-full bg-emerald-400 px-2.5 py-1 text-[11px] font-bold text-slate-950">
+                    {zone.zone_code}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    Priority {zone.sourcing_priority}
+                  </span>
                 </div>
-                <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">{zone.zone_name}</h2>
+                <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">
+                  {zone.zone_name}
+                </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  {zone.forecast_sites} จุด • Hub {zone.hub_province} • {zone.provinces.join(" / ")}
+                  {zone.forecast_sites} จุด • Hub {zone.hub_province} •{" "}
+                  {zone.provinces.join(" / ")}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="hidden text-right sm:block">
-                  <p className="text-sm font-semibold text-white">{zone.candidate_count} candidates</p>
-                  <p className="text-xs text-slate-500">{zone.confirmed_count} confirmed • {zone.award_ready_count} award-ready</p>
+                  <p className="text-sm font-semibold text-white">
+                    {zone.candidate_count} candidates
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {zone.confirmed_count} confirmed • {zone.award_ready_count} award-ready
+                  </p>
                 </div>
-                <span className="text-xl text-slate-400 transition group-open:rotate-45">+</span>
+                <span className="text-xl text-slate-400 transition group-open:rotate-45">
+                  +
+                </span>
               </div>
             </summary>
 
@@ -305,7 +448,10 @@ export default async function SupplierSourcingPage() {
       </div>
 
       <div className="rounded-3xl border border-rose-300/20 bg-rose-400/10 p-5 text-sm leading-7 text-rose-50/90">
-        <strong className="text-rose-100">Award Lock:</strong> Candidate จาก Web/Directory ยังห้าม Award จนกว่า RFQ จะยืนยันราคา, Terms, Capacity, Lead Time และ Delivered Cost และการเลือก Supplier ต้องไม่ทำให้ Forecast GM ต่ำกว่า 32% หรือ Rolling Cash ต่ำกว่า Safety Reserve
+        <strong className="text-rose-100">Award Lock:</strong> Official Source หรือ
+        Public Directory เป็นเพียง Contact Evidence ไม่ใช่ Commercial Approval. Candidate
+        ยังห้าม Award จนกว่า RFQ จะยืนยันราคา, Terms, Capacity, Lead Time และ TDC และการเลือก
+        Supplier ต้องไม่ทำให้ Forecast GM ต่ำกว่า 32% หรือ Rolling Cash ต่ำกว่า Safety Reserve
       </div>
     </section>
   );
