@@ -6,12 +6,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "SiteCost Drying Yard 446",
-    template: "%s | SiteCost 446",
+    default: "SiteCost Project Management SaaS",
+    template: "%s | SiteCost",
   },
   description:
-    "Commercial, PM, Procurement และ Financial Guardrails สำหรับโครงการงานลานตาก 446 จุด",
-  applicationName: "SiteCost Drying Yard 446",
+    "Project Command Center สำหรับ Commercial, PM, Procurement, Field และ Finance พร้อม Financial Guardrails และ Multi-project foundation",
+  applicationName: "SiteCost Project Management SaaS",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/app-icon.svg",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "SiteCost 446",
+    title: "SiteCost",
   },
   formatDetection: {
     telephone: false,
@@ -42,6 +42,14 @@ type RootLayoutProps = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="th">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen bg-slate-950 text-slate-50 antialiased">
         <AppShell>{children}</AppShell>
         <PwaRegister />
