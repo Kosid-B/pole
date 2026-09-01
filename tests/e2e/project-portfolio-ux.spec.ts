@@ -7,7 +7,7 @@ test("mobile portfolio prioritizes project cards and keeps templates collapsed",
 
   await expect(page.getByRole("heading", { name: "พอร์ตโครงการ" })).toBeVisible();
   await expect(page.getByText("90,000 Pole Rollout").first()).toBeVisible();
-  await expect(page.getByText("NEXT FOCUS")).toBeVisible();
+  await expect(page.getByText("NEXT FOCUS", { exact: true })).toBeVisible();
   await expect(page.getByRole("table")).not.toBeVisible();
 
   const templates = page.locator("details").filter({ hasText: "Project templates" });
