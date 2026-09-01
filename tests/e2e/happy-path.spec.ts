@@ -10,36 +10,39 @@ test("admin happy path touches each MVP module", async ({ page }) => {
     }),
   ).toBeVisible();
 
-  const openModule = async (name: RegExp) => {
+  const openModule = async (name: RegExp, route: RegExp) => {
     const link = page
       .getByRole("navigation", { name: "Dashboard navigation" })
       .getByRole("link", { name });
 
     await expect(link).toBeVisible();
-    await link.click();
+    await Promise.all([
+      page.waitForURL(route, { waitUntil: "commit" }),
+      link.click({ noWaitAfter: true }),
+    ]);
   };
 
-  await openModule(/Projects/);
+  await openModule(/Projects/, /\/projects$/);
   await expect(
     page.getByRole("heading", { name: "Project and area management" }),
   ).toBeVisible();
 
-  await openModule(/Teams/);
+  await openModule(/Teams/, /\/teams$/);
   await expect(
     page.getByRole("heading", { name: "Team management" }),
   ).toBeVisible();
 
-  await openModule(/Field Reports/);
+  await openModule(/Field Reports/, /\/field-reports$/);
   await expect(
     page.getByRole("heading", { name: "Daily field reporting" }),
   ).toBeVisible();
 
-  await openModule(/Finance/);
+  await openModule(/Finance/, /\/finance$/);
   await expect(
     page.getByRole("heading", { name: "Billing and cost tracking" }),
   ).toBeVisible();
 
-  await openModule(/Imports/);
+  await openModule(/Imports/, /\/imports$/);
   await expect(
     page.getByRole("heading", { name: "Import review center" }),
   ).toBeVisible();
