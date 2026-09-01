@@ -21,6 +21,8 @@ describe("canAccessRoute", () => {
     expect(canAccessRoute("ADMIN", "/field-readiness")).toBe(true);
     expect(canAccessRoute("ADMIN", "/field-deliveries")).toBe(true);
     expect(canAccessRoute("ADMIN", "/pm/calloffs")).toBe(true);
+    expect(canAccessRoute("ADMIN", "/pm/payment-requests")).toBe(true);
+    expect(canAccessRoute("FIELD_LEADER", "/pm/payment-requests")).toBe(false);
     expect(canAccessRoute("ADMIN", "/pm/invoices")).toBe(true);
     expect(canAccessRoute("EXECUTIVE", "/pm/invoices/review/123")).toBe(true);
   });

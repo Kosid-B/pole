@@ -202,6 +202,7 @@ export default async function SupplierInvoicesPage({ searchParams }: { searchPar
       <nav className="flex flex-wrap gap-2" aria-label="Supplier invoice navigation">
         <Link href="/pm/calloffs" className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white">← Supplier Call-off</Link>
         <Link href="/pm/batches" className="flex min-h-11 items-center rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 text-sm text-cyan-100">Batch Release</Link>
+        <Link href="/pm/payment-requests" className="flex min-h-11 items-center rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 text-sm text-amber-100">Payment Request</Link>
         <Link href="/finance" className="flex min-h-11 items-center rounded-xl border border-violet-300/20 bg-violet-400/10 px-4 text-sm text-violet-100">Finance</Link>
         <Link href="/pm" className="flex min-h-11 items-center rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white">PM Control</Link>
       </nav>

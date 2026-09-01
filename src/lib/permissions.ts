@@ -85,6 +85,11 @@ const navItems: NavItem[] = [
     description: "3-Way Match • Verified Actual • Manual eligibility",
   },
   {
+    href: "/pm/payment-requests",
+    label: "Payment Request",
+    description: "Eligible Invoice • Cash Reservation • No Auto Pay",
+  },
+  {
     href: "/procurement",
     label: "Procurement",
     description: "Cluster • RFQ A/B/C • Framework • Customer funding",
