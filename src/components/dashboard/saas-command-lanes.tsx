@@ -2,7 +2,17 @@ import Link from "next/link";
 import {
   SITECOST_FINANCIAL_GUARDRAILS,
   SITECOST_MODULES,
+  type SiteCostModuleCode,
 } from "@/lib/sitecost-saas";
+
+const commandLaneAriaLabels: Record<SiteCostModuleCode, string> = {
+  portfolio: "เปิดพอร์ตโครงการ",
+  commercial: "เปิดพื้นที่บริหารรายได้และสัญญา",
+  pm: "เปิดพื้นที่บริหารโครงการ",
+  procurement: "เปิดพื้นที่จัดซื้อและซัพพลายเออร์",
+  field: "เปิดพื้นที่ปฏิบัติงานภาคสนาม",
+  finance: "เปิดพื้นที่การเงินและกระแสเงินสด",
+};
 
 export function SaasCommandLanes() {
   return (
@@ -41,7 +51,7 @@ export function SaasCommandLanes() {
           <Link
             key={module.code}
             href={module.href}
-            aria-label={`Open ${module.labelEn} command lane`}
+            aria-label={commandLaneAriaLabels[module.code]}
             className="group rounded-[1.6rem] border border-white/8 bg-white/[0.04] p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.07]"
           >
             <div className="flex items-start justify-between gap-4">
