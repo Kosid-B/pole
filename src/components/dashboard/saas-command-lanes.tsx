@@ -41,6 +41,7 @@ export function SaasCommandLanes() {
           <Link
             key={module.code}
             href={module.href}
+            aria-label={`Open ${module.labelEn} command lane`}
             className="group rounded-[1.6rem] border border-white/8 bg-white/[0.04] p-5 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.07]"
           >
             <div className="flex items-start justify-between gap-4">
