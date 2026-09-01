@@ -5,7 +5,9 @@ test("admin happy path touches each MVP module", async ({ page }) => {
   await openAsSeededRole(page, "admin@example.com", "ADMIN", "/");
 
   await expect(
-    page.getByRole("heading", { name: "Executive portfolio dashboard" }),
+    page.getByRole("heading", {
+      name: "งานลานตาก 446 จุด — เห็นสถานะก่อน แล้วค่อยตัดสินใจ",
+    }),
   ).toBeVisible();
 
   const openModule = async (name: RegExp) => {

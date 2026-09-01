@@ -9,12 +9,12 @@ test("admin can reach the protected dashboard shell", async ({ page }) => {
   await openAsSeededRole(page, "admin@example.com", "ADMIN", "/");
 
   await expect(
-    page.getByRole("heading", { name: "Project operations dashboard" }),
+    page.getByRole("heading", { name: "SiteCost — งานลานตาก 446 จุด" }),
   ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Dashboard navigation" }),
   ).toBeVisible();
-  await expect(page.getByText("Signed in as")).toBeVisible();
+  await expect(page.getByText("บัญชีโครงการ · ADMIN")).toBeVisible();
 });
 
 test("field leaders are redirected away from finance", async ({ page }) => {
