@@ -62,7 +62,7 @@ const productionUsers = [
   {
     fullName: "โฆษิต แก้วเต่า",
     email: "support@b-tctraining.com",
-    role: "EXECUTIVE" as const,
+    role: "ADMIN" as const,
     isActive: true,
   },
   {
