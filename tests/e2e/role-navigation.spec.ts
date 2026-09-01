@@ -9,24 +9,30 @@ test("executive sees cross-functional navigation", async ({ page }) => {
     "/",
   );
 
-  await expect(
-    page.getByRole("navigation", { name: "Dashboard navigation" }),
-  ).toBeVisible();
-  await expect(page.getByRole("link", { name: /Projects/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Commercial \/ Pricing/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /PM Control/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Award Approval/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Batch Release/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Supplier Call-off/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Payment Request/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Supplier Invoice/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Procurement/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Teams/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Field Reports/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Field Readiness/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Field Delivery/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Finance/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Imports/i })).toBeVisible();
+  const navigation = page.getByRole("navigation", {
+    name: "Dashboard navigation",
+  });
+  await expect(navigation).toBeVisible();
+
+  for (const name of [
+    /Projects/i,
+    /Commercial \/ Pricing/i,
+    /PM Control/i,
+    /Award Approval/i,
+    /Batch Release/i,
+    /Supplier Call-off/i,
+    /Payment Request/i,
+    /Supplier Invoice/i,
+    /Procurement/i,
+    /Teams/i,
+    /Field Reports/i,
+    /Field Readiness/i,
+    /Field Delivery/i,
+    /Finance/i,
+    /Imports/i,
+  ]) {
+    await expect(navigation.getByRole("link", { name })).toBeVisible();
+  }
 });
 
 test("field leader keeps field workflows but not PM release controls", async ({ page }) => {
@@ -38,17 +44,26 @@ test("field leader keeps field workflows but not PM release controls", async ({ 
   );
 
   await expect(page).toHaveURL(/\/field-reports$/);
-  await expect(page.getByRole("link", { name: /Field Reports/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Field Readiness/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Field Delivery/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Commercial \/ Pricing/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /PM Control/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Award Approval/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Batch Release/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Supplier Call-off/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Payment Request/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Supplier Invoice/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Procurement/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Finance/i })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Imports/i })).toHaveCount(0);
+  const navigation = page.getByRole("navigation", {
+    name: "Dashboard navigation",
+  });
+
+  for (const name of [/Field Reports/i, /Field Readiness/i, /Field Delivery/i]) {
+    await expect(navigation.getByRole("link", { name })).toBeVisible();
+  }
+
+  for (const name of [
+    /Commercial \/ Pricing/i,
+    /PM Control/i,
+    /Award Approval/i,
+    /Batch Release/i,
+    /Supplier Call-off/i,
+    /Payment Request/i,
+    /Supplier Invoice/i,
+    /Procurement/i,
+    /Finance/i,
+    /Imports/i,
+  ]) {
+    await expect(navigation.getByRole("link", { name })).toHaveCount(0);
+  }
 });

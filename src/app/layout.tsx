@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Kanit } from "next/font/google";
 import type { ReactNode } from "react";
 import { AppShell } from "@/app/app-shell";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
+
+const kanit = Kanit({
+  subsets: ["thai", "latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-kanit",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -41,7 +49,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="th">
+    <html lang="th" className={kanit.variable}>
       <body className="min-h-screen bg-slate-950 text-slate-50 antialiased">
         <AppShell>{children}</AppShell>
         <PwaRegister />

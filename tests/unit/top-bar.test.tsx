@@ -19,7 +19,7 @@ describe("TopBar", () => {
     expect(screen.getByText("admin@example.com")).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
-        name: "Change account",
+        name: "เปลี่ยนบัญชี",
       }),
     ).toHaveAttribute("href", "/sign-out?redirectTo=%2Fsign-in");
   });
