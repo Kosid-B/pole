@@ -12,10 +12,10 @@ export default async function ProjectsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.34em] text-cyan-200/70">
-            Project Portfolio
+            Project Portfolio • Multi-project SaaS
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-white">
-            Multi-project management
+            Project and area management
           </h2>
           <p className="max-w-3xl text-sm leading-7 text-slate-300">
             ใช้ SiteCost เป็น SaaS กลางสำหรับหลายโครงการ แต่ละ Project แยกพื้นที่ ทีม
