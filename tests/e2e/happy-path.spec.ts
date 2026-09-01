@@ -8,21 +8,20 @@ test("admin happy path touches each MVP module", async ({ page }) => {
     page.getByRole("heading", { name: "ภาพรวมผู้บริหาร" }),
   ).toBeVisible();
 
-  const openModule = async (name: RegExp) => {
-    const link = page
-      .getByRole("navigation", { name: "Dashboard navigation" })
-      .getByRole("link", { name });
+  const navigation = page.getByRole("navigation", { name: "Dashboard navigation" });
+  const openModule = async (name: string | RegExp, exact = false) => {
+    const link = navigation.getByRole("link", { name, exact });
 
     await expect(link).toBeVisible();
     await link.click();
   };
 
-  await openModule(/โครงการ/);
+  await openModule("โครงการ", true);
   await expect(
     page.getByRole("heading", { name: "Project and area management" }),
   ).toBeVisible();
 
-  await openModule(/ทีมงาน/);
+  await openModule("ทีมงาน", true);
   await expect(
     page.getByRole("heading", { name: "Team management" }),
   ).toBeVisible();
