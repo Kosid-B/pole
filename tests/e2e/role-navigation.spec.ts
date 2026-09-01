@@ -12,7 +12,7 @@ test("executive sees cross-functional navigation", async ({ page }) => {
   await expect(
     page.getByRole("navigation", { name: "Dashboard navigation" }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: /Projects/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /โครงการ/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Commercial \/ Pricing/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /PM Control/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Award Approval/i })).toBeVisible();
@@ -21,7 +21,7 @@ test("executive sees cross-functional navigation", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Payment Request/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Supplier Invoice/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Procurement/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Teams/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /ทีมงาน/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Field Reports/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Field Readiness/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Field Delivery/i })).toBeVisible();
