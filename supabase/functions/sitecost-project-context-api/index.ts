@@ -31,7 +31,7 @@ type ProjectRow = {
 type ProjectModuleRow = {
   project_id: string;
   module_code: string;
-  is_enabled: boolean;
+  is_active: boolean;
 };
 
 function unique(values: string[]) {
@@ -101,9 +101,9 @@ Deno.serve(async (request: Request) => {
       } else {
         const { data: orgMemberships, error: orgMembershipError } = await db
           .from("core_organization_members")
-          .select("organization_id,member_role,status")
+          .select("organization_id,member_role,is_active")
           .eq("user_id", user.id)
-          .eq("status", "active")
+          .eq("is_active", true)
           .in("member_role", ["owner", "executive", "admin"]);
 
         if (orgMembershipError) throw orgMembershipError;
@@ -180,9 +180,9 @@ Deno.serve(async (request: Request) => {
           .order("project_name"),
         db
           .from("core_project_modules")
-          .select("project_id,module_code,is_enabled")
+          .select("project_id,module_code,is_active")
           .in("project_id", accessibleProjectIds)
-          .eq("is_enabled", true),
+          .eq("is_active", true),
       ]);
 
     if (projectsError) throw projectsError;
