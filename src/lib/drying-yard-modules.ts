@@ -191,6 +191,73 @@ export type ProcurementOverview = {
   }>;
 };
 
+export type SupplierCandidate = {
+  id: string;
+  procurement_zone_code: string;
+  material_group: "CONCRETE_240KSC" | "AGGREGATE" | "STEEL_REINFORCEMENT" | string;
+  supplier_name: string;
+  plant_location: string | null;
+  service_provinces: string[] | null;
+  phone: string | null;
+  email: string | null;
+  line_id: string | null;
+  website: string | null;
+  source_url: string | null;
+  source_kind: string | null;
+  contact_verified_at: string | null;
+  contact_status: string | null;
+  commercial_status: "unconfirmed" | "rfq_sent" | "quoted" | "confirmed" | "rejected" | string;
+  credit_days: number | null;
+  deposit_pct: number | null;
+  capacity_per_day: number | null;
+  lead_time_days: number | null;
+  distance_km: number | null;
+  quoted_base_rate: number | null;
+  estimated_freight: number | null;
+  total_delivered_cost: number | null;
+  recommendation_status: string | null;
+  priority_rank: number | null;
+  note: string | null;
+  updated_at: string | null;
+  award_ready: boolean;
+  rfq_missing: string[];
+};
+
+export type SupplierSourcingOverview = {
+  ok: boolean;
+  label: string;
+  summary: {
+    zones: number;
+    candidates: number;
+    confirmed: number;
+    award_ready: number;
+    public_contacts: number;
+    concrete_candidates: number;
+    aggregate_candidates: number;
+    steel_candidates: number;
+  };
+  zones: Array<{
+    id: string;
+    zone_code: string;
+    zone_name: string;
+    hub_province: string | null;
+    provinces: string[];
+    forecast_sites: number;
+    sourcing_priority: number;
+    status: string | null;
+    note: string | null;
+    updated_at: string | null;
+    candidates: SupplierCandidate[];
+    candidate_count: number;
+    confirmed_count: number;
+    award_ready_count: number;
+    concrete_count: number;
+    aggregate_count: number;
+    steel_count: number;
+  }>;
+  sourcing_rule: string;
+};
+
 export type CustomerProposalLink = {
   ok: boolean;
   proposal_no: string;
@@ -207,6 +274,10 @@ const COMMERCIAL_API_URL =
 const PM_API_URL =
   process.env.DRYING_YARD_PM_API_URL?.trim() ||
   "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/drying-yard-pm-api";
+
+const SUPPLIER_API_URL =
+  process.env.DRYING_YARD_SUPPLIER_API_URL?.trim() ||
+  "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/drying-yard-supplier-api";
 
 const PROPOSAL_LINK_API_URL =
   process.env.DRYING_YARD_PROPOSAL_LINK_API_URL?.trim() ||
@@ -265,6 +336,44 @@ async function loadAdminModule<T>(
   }
 }
 
+export async function postSupplierModule<T>(
+  body: Record<string, unknown>,
+): Promise<LoadResult<T>> {
+  const code = process.env.DRYING_YARD_ADMIN_ACCESS_CODE?.trim();
+
+  if (!code) {
+    return {
+      configured: false,
+      data: null,
+      error: "Set DRYING_YARD_ADMIN_ACCESS_CODE in the server environment.",
+    };
+  }
+
+  try {
+    const response = await fetch(SUPPLIER_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, ...body }),
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as T & { error?: string; detail?: string };
+    if (!response.ok) {
+      return {
+        configured: true,
+        data: null,
+        error: payload.detail || payload.error || `Supplier module returned HTTP ${response.status}`,
+      };
+    }
+    return { configured: true, data: payload, error: null };
+  } catch (error) {
+    return {
+      configured: true,
+      data: null,
+      error: error instanceof Error ? error.message : "Unable to update supplier module",
+    };
+  }
+}
+
 export function getCommercialOverview() {
   return loadAdminModule<CommercialOverview>(COMMERCIAL_API_URL, "overview");
 }
@@ -275,6 +384,10 @@ export function getPmOverview() {
 
 export function getProcurementOverview() {
   return loadAdminModule<ProcurementOverview>(PM_API_URL, "procurement_overview");
+}
+
+export function getSupplierSourcingOverview() {
+  return loadAdminModule<SupplierSourcingOverview>(SUPPLIER_API_URL, "overview");
 }
 
 export function getCustomerProposalLink() {
