@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  AUTH_PROVIDER_COOKIE_NAME,
   EMAIL_COOKIE_NAME,
   ROLE_COOKIE_NAME,
+  SUPABASE_ACCESS_TOKEN_COOKIE_NAME,
   USER_ID_COOKIE_NAME,
+  authenticateCredentials,
   getSafeRedirectTarget,
-  verifyPasswordForUser,
 } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -12,16 +14,16 @@ export async function POST(request: NextRequest) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? "");
-  const user = await verifyPasswordForUser(email, password);
+  const session = await authenticateCredentials(email, password);
 
-  if (!user) {
+  if (!session) {
     return NextResponse.redirect(
       new URL("/sign-in?error=invalid-credentials", request.url),
       303,
     );
   }
 
-  const destination = getSafeRedirectTarget(redirectTo, user.role);
+  const destination = getSafeRedirectTarget(redirectTo, session.user.role);
   const response = NextResponse.redirect(new URL(destination, request.url), 303);
   const cookieOptions = {
     httpOnly: true,
@@ -30,9 +32,19 @@ export async function POST(request: NextRequest) {
     path: "/",
   };
 
-  response.cookies.set(USER_ID_COOKIE_NAME, user.id, cookieOptions);
-  response.cookies.set(ROLE_COOKIE_NAME, user.role, cookieOptions);
-  response.cookies.set(EMAIL_COOKIE_NAME, user.email, cookieOptions);
+  response.cookies.set(USER_ID_COOKIE_NAME, session.user.id, cookieOptions);
+  response.cookies.set(ROLE_COOKIE_NAME, session.user.role, cookieOptions);
+  response.cookies.set(EMAIL_COOKIE_NAME, session.user.email, cookieOptions);
+  response.cookies.set(AUTH_PROVIDER_COOKIE_NAME, session.provider, cookieOptions);
+
+  if (session.provider === "supabase" && session.accessToken) {
+    response.cookies.set(SUPABASE_ACCESS_TOKEN_COOKIE_NAME, session.accessToken, {
+      ...cookieOptions,
+      maxAge: session.expiresIn,
+    });
+  } else {
+    response.cookies.delete(SUPABASE_ACCESS_TOKEN_COOKIE_NAME);
+  }
 
   return response;
 }

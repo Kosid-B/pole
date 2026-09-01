@@ -8,10 +8,18 @@ import {
   getDefaultDashboardRoute,
   normalizeRole,
 } from "@/lib/permissions";
+import {
+  getConfiguredAuthProvider,
+  getSupabaseSiteCostIdentity,
+  signInWithSupabasePassword,
+  type SiteCostAuthProvider,
+} from "@/lib/supabase-auth";
 
 export const USER_ID_COOKIE_NAME = "pm-user-id";
 export const ROLE_COOKIE_NAME = "pm-role";
 export const EMAIL_COOKIE_NAME = "pm-email";
+export const AUTH_PROVIDER_COOKIE_NAME = "pm-auth-provider";
+export const SUPABASE_ACCESS_TOKEN_COOKIE_NAME = "pm-supabase-access-token";
 
 export type AppSession = {
   user: {
@@ -20,6 +28,12 @@ export type AppSession = {
     name: string;
     role: AppRole;
   };
+};
+
+export type AuthenticatedSessionSeed = AppSession & {
+  provider: SiteCostAuthProvider;
+  accessToken?: string;
+  expiresIn?: number;
 };
 
 export function getSafeRedirectTarget(
@@ -65,6 +79,8 @@ export async function clearSessionCookies() {
   cookieStore.delete(USER_ID_COOKIE_NAME);
   cookieStore.delete(ROLE_COOKIE_NAME);
   cookieStore.delete(EMAIL_COOKIE_NAME);
+  cookieStore.delete(AUTH_PROVIDER_COOKIE_NAME);
+  cookieStore.delete(SUPABASE_ACCESS_TOKEN_COOKIE_NAME);
 }
 
 export async function clearSessionAndRedirect(
@@ -119,8 +135,66 @@ export async function verifyPasswordForUser(email: string, password: string) {
   return user;
 }
 
+export async function authenticateCredentials(
+  email: string,
+  password: string,
+): Promise<AuthenticatedSessionSeed | null> {
+  const provider = getConfiguredAuthProvider();
+
+  if (provider === "supabase") {
+    const result = await signInWithSupabasePassword(email, password);
+
+    if (!result) {
+      return null;
+    }
+
+    return {
+      provider: "supabase",
+      user: result.identity,
+      accessToken: result.accessToken,
+      expiresIn: result.expiresIn,
+    };
+  }
+
+  const user = await verifyPasswordForUser(email, password);
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    provider: "legacy",
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.fullName,
+      role: user.role,
+    },
+  };
+}
+
 export async function getSession() {
   const cookieStore = await cookies();
+  const providerCookie = cookieStore.get(AUTH_PROVIDER_COOKIE_NAME)?.value;
+
+  if (providerCookie === "supabase") {
+    const accessToken = cookieStore.get(SUPABASE_ACCESS_TOKEN_COOKIE_NAME)?.value;
+
+    if (!accessToken) {
+      return null;
+    }
+
+    const identity = await getSupabaseSiteCostIdentity(accessToken);
+
+    if (!identity) {
+      return null;
+    }
+
+    return {
+      user: identity,
+    } satisfies AppSession;
+  }
+
   const userId = cookieStore.get(USER_ID_COOKIE_NAME)?.value;
   const role = normalizeRole(cookieStore.get(ROLE_COOKIE_NAME)?.value);
 
@@ -162,9 +236,9 @@ export async function signInWithPassword(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? "");
-  const user = await verifyPasswordForUser(email, password);
+  const session = await authenticateCredentials(email, password);
 
-  if (!user) {
+  if (!session) {
     redirect("/sign-in?error=invalid-credentials");
   }
 
@@ -181,14 +255,21 @@ export async function signInWithPassword(formData: FormData) {
     path: "/",
   };
 
-  // Set the complete auth tuple directly. Avoid emitting delete + set headers for the
-  // same cookie names in one response; some production runners can apply those headers
-  // in an order that leaves the browser with an empty session after the redirect.
-  cookieStore.set(USER_ID_COOKIE_NAME, user.id, cookieOptions);
-  cookieStore.set(ROLE_COOKIE_NAME, user.role, cookieOptions);
-  cookieStore.set(EMAIL_COOKIE_NAME, user.email, cookieOptions);
+  cookieStore.set(USER_ID_COOKIE_NAME, session.user.id, cookieOptions);
+  cookieStore.set(ROLE_COOKIE_NAME, session.user.role, cookieOptions);
+  cookieStore.set(EMAIL_COOKIE_NAME, session.user.email, cookieOptions);
+  cookieStore.set(AUTH_PROVIDER_COOKIE_NAME, session.provider, cookieOptions);
 
-  redirect(sanitizeRedirect(redirectTo, user.role));
+  if (session.provider === "supabase" && session.accessToken) {
+    cookieStore.set(SUPABASE_ACCESS_TOKEN_COOKIE_NAME, session.accessToken, {
+      ...cookieOptions,
+      maxAge: session.expiresIn,
+    });
+  } else {
+    cookieStore.delete(SUPABASE_ACCESS_TOKEN_COOKIE_NAME);
+  }
+
+  redirect(sanitizeRedirect(redirectTo, session.user.role));
 }
 
 export async function signOut() {
