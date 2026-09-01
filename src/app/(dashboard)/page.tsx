@@ -3,6 +3,7 @@ import { KpiCard } from "@/components/dashboard/kpi-card";
 import { ProgressOverview } from "@/components/dashboard/progress-overview";
 import { ProjectHealthTable } from "@/components/dashboard/project-health-table";
 import { RiskAlertList } from "@/components/dashboard/risk-alert-list";
+import { SaasCommandLanes } from "@/components/dashboard/saas-command-lanes";
 import { getDashboardAlerts } from "@/lib/dashboard/get-dashboard-alerts";
 import { getDashboardSummary } from "@/lib/dashboard/get-dashboard-summary";
 
@@ -19,6 +20,8 @@ export default async function DashboardHomePage() {
 
   return (
     <section className="space-y-6">
+      <SaasCommandLanes />
+
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="rounded-[1.9rem] border border-[var(--panel-border)] bg-[linear-gradient(180deg,rgba(7,17,31,0.94),rgba(11,24,42,0.84))] p-6 shadow-[0_24px_80px_rgba(2,6,23,0.28)]">
           <div className="space-y-3">
