@@ -77,4 +77,22 @@ describe("schema smoke", () => {
 
     await prisma.$disconnect();
   });
+
+  it("bootstraps the SiteCost support account as an active admin", async () => {
+    const prisma = createPrismaClient(runtime.databaseUrl);
+
+    await seedUsers(prisma, "production");
+
+    const supportAdmin = await prisma.user.findUnique({
+      where: { email: "support@b-tctraining.com" },
+    });
+
+    expect(supportAdmin).toMatchObject({
+      email: "support@b-tctraining.com",
+      role: "ADMIN",
+      isActive: true,
+    });
+
+    await prisma.$disconnect();
+  });
 });
