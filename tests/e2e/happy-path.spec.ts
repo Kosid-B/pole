@@ -5,7 +5,7 @@ test("admin happy path touches each MVP module", async ({ page }) => {
   await openAsSeededRole(page, "admin@example.com", "ADMIN", "/");
 
   await expect(
-    page.getByRole("heading", { name: "Executive portfolio dashboard" }),
+    page.getByRole("heading", { name: "ภาพรวมผู้บริหาร" }),
   ).toBeVisible();
 
   const openModule = async (name: RegExp) => {
@@ -17,12 +17,12 @@ test("admin happy path touches each MVP module", async ({ page }) => {
     await link.click();
   };
 
-  await openModule(/Projects/);
+  await openModule(/โครงการ/);
   await expect(
     page.getByRole("heading", { name: "Project and area management" }),
   ).toBeVisible();
 
-  await openModule(/Teams/);
+  await openModule(/ทีมงาน/);
   await expect(
     page.getByRole("heading", { name: "Team management" }),
   ).toBeVisible();
