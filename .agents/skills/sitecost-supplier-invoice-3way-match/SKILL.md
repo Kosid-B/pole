@@ -44,6 +44,18 @@ Never auto-create or auto-approve:
 - payment evidence;
 - paid status.
 
+## Payment Request + Cash Reservation downstream control
+
+After `payment_eligible`, keep Payment Request and Cash Reservation as separate manual controls:
+
+1. `ADMIN` or `EXECUTIVE` may submit a Payment Request only for an invoice that still has an immutable `payment_eligible` review with `match_pass = true`.
+2. Reserve the supplier invoice Gross amount conservatively. Do not infer withholding tax or net bank settlement in this module.
+3. Only `EXECUTIVE` may approve `cash_reserved`. Backend must reload the live PM Financial Guardrail, require Forecast GM >= 32.00%, and subtract all existing active cash reservations plus the new request from live Minimum Rolling Cash.
+4. Approve only when projected Minimum Rolling Cash after reservation remains >= Safety Reserve.
+5. Lock/check the PM cash-flow settings version so a stale model cannot approve a reservation after financial assumptions change.
+6. Cash Reservation is not Payment Execution. It must not create bank instructions, payment transactions, paid status, settlement, WHT posting, accounting journals, or customer claims.
+7. Payment Request reviews are append-only, idempotent and retain the live financial snapshot used for the decision.
+
 ## Invoice submission gate
 
 Only `ADMIN` or `EXECUTIVE` may submit a Supplier Invoice.
@@ -163,5 +175,8 @@ Before releasing invoice-control changes confirm:
 - [ ] Payment Eligibility does not create any payment/bank/accounting/settlement transaction.
 - [ ] Invoice/review records preserve immutable evidence and actor identity.
 - [ ] FIELD_LEADER has no invoice/TDC/payment-economics access.
+- [ ] Payment Request is allowed only after immutable Payment Eligibility and uses Invoice Gross as the conservative reservation amount.
+- [ ] Cash Reservation is EXECUTIVE-only and rechecks GM >= 32% plus Rolling Cash >= Safety Reserve after all active reservations.
+- [ ] Cash Reservation never creates a payment, bank instruction, paid status, accounting/WHT posting, settlement or customer claim.
 - [ ] RLS, RPC execute privileges, security advisors and performance advisors were rechecked after DDL.
 - [ ] Live baseline was rechecked and no fake operational invoice was inserted during development.
