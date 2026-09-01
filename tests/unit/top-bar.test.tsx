@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { TopBar } from "@/components/layout/top-bar";
 
 describe("TopBar", () => {
-  it("shows the signed-in email and routes account changes through the session-clearing screen", () => {
+  it("shows the signed-in email and keeps project/account actions explicit", () => {
     render(
       <TopBar
         session={{
@@ -17,9 +17,13 @@ describe("TopBar", () => {
     );
 
     expect(screen.getByText("admin@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "เลือก / ดูโครงการ" })).toHaveAttribute(
+      "href",
+      "/projects",
+    );
     expect(
       screen.getByRole("link", {
-        name: "Change account",
+        name: "เปลี่ยนบัญชี",
       }),
     ).toHaveAttribute("href", "/sign-out?redirectTo=%2Fsign-in");
   });
