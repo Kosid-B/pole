@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { requireSession } from "@/lib/auth";
 import { getSiteCostProjectContext } from "@/lib/project-context";
+import { selectSiteCostProject } from "@/server/actions/project-context";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -24,6 +25,7 @@ export default async function DashboardLayout({
           selectedProject={projectContext.selectedProject}
           projects={authorizedProjects}
           projectCount={authorizedProjects.length}
+          selectProjectAction={selectSiteCostProject}
         />
         <main className="rounded-[2rem] border border-[var(--panel-border)] bg-[var(--panel)] p-5 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.35)] backdrop-blur sm:p-6 lg:p-8">
           {children}
