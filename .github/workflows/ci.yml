@@ -105,8 +105,71 @@ jobs:
           SITECOST_RUNTIME_BASE_URL: http://127.0.0.1:3000
         run: node tests/runtime/auth-db.integration.mjs
 
+      - name: Start fake Supabase runtime service
+        shell: bash
+        run: |
+          node tests/runtime/fake-supabase-runtime.mjs > /tmp/sitecost-fake-supabase.log 2>&1 &
+          echo $! > /tmp/sitecost-fake-supabase.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:4010/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/sitecost-fake-supabase.log
+          exit 1
+
+      - name: Run Supabase-ready container without legacy database
+        shell: bash
+        run: |
+          docker run --detach \
+            --name sitecost-supabase-ci \
+            -p 3001:3000 \
+            --add-host=host.docker.internal:host-gateway \
+            -e TASK3_DATABASE_DIRECTORY=/app/data \
+            -e DATABASE_URL= \
+            -e NEXTAUTH_SECRET=ci-only-not-a-production-secret \
+            -e NEXTAUTH_URL=http://localhost:3001 \
+            -e SITECOST_AUTH_PROVIDER=supabase \
+            -e SITECOST_SUPABASE_URL=http://host.docker.internal:4010 \
+            -e SITECOST_SUPABASE_PUBLISHABLE_KEY=ci-publishable-key \
+            -e SITECOST_PROJECT_CONTEXT_API_URL=http://host.docker.internal:4010/project-context \
+            sitecost-runtime-ci:${{ github.sha }}
+
+      - name: Verify Supabase shell bypasses legacy Prisma database
+        shell: bash
+        env:
+          SITECOST_RUNTIME_BASE_URL: http://127.0.0.1:3001
+        run: |
+          test "$(docker exec sitecost-supabase-ci id -u)" = "1001"
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3001/api/health; then
+              break
+            fi
+            if [ "$attempt" = "30" ]; then
+              docker logs sitecost-supabase-ci
+              cat /tmp/sitecost-fake-supabase.log
+              exit 1
+            fi
+            sleep 2
+          done
+
+          node tests/runtime/supabase-shell.integration.mjs
+
+          if docker exec sitecost-supabase-ci sh -lc 'find /app/data -maxdepth 1 -type f -print -quit | grep -q .'; then
+            echo "Supabase runtime unexpectedly created or touched a legacy database file"
+            docker exec sitecost-supabase-ci sh -lc 'find /app/data -maxdepth 1 -type f -print'
+            docker logs sitecost-supabase-ci
+            exit 1
+          fi
+
       - name: Cleanup Docker contract resources
         if: always()
+        shell: bash
         run: |
           docker rm --force sitecost-ci || true
+          docker rm --force sitecost-supabase-ci || true
           docker volume rm sitecost-ci-data || true
+          if [ -f /tmp/sitecost-fake-supabase.pid ]; then
+            kill "$(cat /tmp/sitecost-fake-supabase.pid)" || true
+          fi
