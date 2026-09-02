@@ -3,7 +3,6 @@ import { AuthoritativeProjectRegistry } from "@/components/projects/authoritativ
 import { ProjectTable } from "@/components/projects/project-table";
 import { getSiteCostProjectContext } from "@/lib/project-context";
 import { SITECOST_PROJECT_TEMPLATES } from "@/lib/sitecost-saas";
-import { listProjects } from "@/server/queries/projects";
 
 function formatBaht(value: number) {
   return new Intl.NumberFormat("th-TH", {
@@ -14,12 +13,12 @@ function formatBaht(value: number) {
 }
 
 export default async function ProjectsPage() {
-  const [projects, projectContext] = await Promise.all([
-    listProjects(),
-    getSiteCostProjectContext(),
-  ]);
-
+  const projectContext = await getSiteCostProjectContext();
   const usesAuthoritativeRegistry = projectContext.configured;
+  const projects = usesAuthoritativeRegistry
+    ? []
+    : await (await import("@/server/queries/projects")).listProjects();
+
   const registryProjects = projectContext.data?.projects ?? [];
   const registryActiveProjects = registryProjects.filter(
     (project) => project.status.toLowerCase() === "active",
@@ -133,7 +132,7 @@ export default async function ProjectsPage() {
               การสร้างและสลับโครงการยังถูก gate ไว้
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-              ปุ่มสร้างโครงการจาก local Prisma และตัวเลือก switching จะไม่แสดงใน authoritative mode จนกว่าการเขียน core_projects, membership และ selected project_id จะเชื่อมกับทุก module query แบบ end-to-end
+              ปุ่มสร้างโครงการจาก local Prisma จะไม่แสดงใน authoritative mode และ local project query จะไม่รัน จนกว่าการเขียน core_projects, membership และ selected project_id จะเชื่อมกับทุก module query แบบ end-to-end
             </p>
           </section>
         </>
