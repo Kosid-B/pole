@@ -15,7 +15,13 @@ if (prismaArguments.length === 0) {
 }
 
 const runtime = getTask3DatabaseRuntime();
-const prismaBin = resolve(projectRoot, "node_modules", ".bin", "prisma.cmd");
+const isWindows = process.platform === "win32";
+const prismaBin = resolve(
+  projectRoot,
+  "node_modules",
+  ".bin",
+  isWindows ? "prisma.cmd" : "prisma",
+);
 const normalizedArguments = [...prismaArguments];
 const schemaFlagIndex = normalizedArguments.indexOf("--schema");
 
@@ -55,7 +61,12 @@ if (isDbPush) {
   process.exit(result.status ?? 1);
 }
 
-const result = spawnSync("cmd.exe", ["/c", prismaBin, ...normalizedArguments], {
+const command = isWindows ? "cmd.exe" : prismaBin;
+const commandArgs = isWindows
+  ? ["/d", "/s", "/c", prismaBin, ...normalizedArguments]
+  : normalizedArguments;
+
+const result = spawnSync(command, commandArgs, {
   cwd: runtime.directory,
   env: {
     ...process.env,

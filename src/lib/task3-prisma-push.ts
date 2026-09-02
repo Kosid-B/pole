@@ -1,5 +1,4 @@
 import { spawnSync } from "node:child_process";
-
 import { existsSync } from "node:fs";
 
 type Task3PrismaPushOptions = {
@@ -18,7 +17,11 @@ function runPrismaCommand(
   databaseUrl: string,
   input?: string,
 ) {
-  return spawnSync("cmd.exe", ["/c", prismaBin, ...args], {
+  const isWindows = process.platform === "win32";
+  const command = isWindows ? "cmd.exe" : prismaBin;
+  const commandArgs = isWindows ? ["/d", "/s", "/c", prismaBin, ...args] : args;
+
+  return spawnSync(command, commandArgs, {
     cwd,
     env: {
       ...process.env,

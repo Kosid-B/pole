@@ -50,3 +50,58 @@ jobs:
 
       - name: Build application
         run: pnpm build
+
+  docker-contract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build initializer image
+        run: docker build --target builder --tag sitecost-builder-ci:${{ github.sha }} .
+
+      - name: Build runtime image
+        run: docker build --target runner --tag sitecost-runtime-ci:${{ github.sha }} .
+
+      - name: Initialize persistent SQLite volume
+        run: |
+          docker volume create sitecost-ci-data
+          docker run --rm --user 0:0 \
+            -v sitecost-ci-data:/app/data \
+            -e TASK3_DATABASE_DIRECTORY=/app/data \
+            -e DATABASE_URL=file:/app/data/sitecost.db \
+            sitecost-builder-ci:${{ github.sha }} \
+            sh -lc "pnpm db:push && pnpm db:seed && chown -R 1001:1001 /app/data"
+
+      - name: Run production-like container
+        run: |
+          docker run --detach \
+            --name sitecost-ci \
+            -p 3000:3000 \
+            -v sitecost-ci-data:/app/data \
+            -e TASK3_DATABASE_DIRECTORY=/app/data \
+            -e DATABASE_URL=file:/app/data/sitecost.db \
+            -e NEXTAUTH_SECRET=ci-only-not-a-production-secret \
+            -e NEXTAUTH_URL=http://localhost:3000 \
+            -e SITECOST_AUTH_PROVIDER=legacy \
+            sitecost-runtime-ci:${{ github.sha }}
+
+      - name: Verify non-root runtime and health endpoint
+        shell: bash
+        run: |
+          test "$(docker exec sitecost-ci id -u)" = "1001"
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs sitecost-ci
+          exit 1
+
+      - name: Cleanup Docker contract resources
+        if: always()
+        run: |
+          docker rm --force sitecost-ci || true
+          docker volume rm sitecost-ci-data || true
