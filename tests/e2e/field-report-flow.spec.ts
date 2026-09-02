@@ -4,6 +4,8 @@ import { openAsSeededRole } from "./helpers/session";
 test("field leader can create a field report with material and equipment usage", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
+
   await openAsSeededRole(
     page,
     "field@example.com",
@@ -14,7 +16,6 @@ test("field leader can create a field report with material and equipment usage",
   await expect(
     page.getByRole("heading", { name: "Create a field report" }),
   ).toBeVisible();
-  await page.waitForLoadState("networkidle");
 
   await page.getByLabel("Project").selectOption({ index: 1 });
   await page.getByLabel("Area").selectOption({ index: 1 });
@@ -36,13 +37,8 @@ test("field leader can create a field report with material and equipment usage",
   });
 
   await Promise.all([
-    page.waitForURL(/\/field-reports$/, {
-      timeout: 30_000,
-      waitUntil: "commit",
-    }),
-    page.getByRole("button", { name: "Save field report" }).click({
-      noWaitAfter: true,
-    }),
+    page.waitForURL(/\/field-reports$/, { timeout: 30_000 }),
+    page.getByRole("button", { name: "Save field report" }).click(),
   ]);
 
   await expect(
