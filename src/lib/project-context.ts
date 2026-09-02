@@ -5,46 +5,25 @@ import {
   AUTH_PROVIDER_COOKIE_NAME,
   SUPABASE_ACCESS_TOKEN_COOKIE_NAME,
 } from "@/lib/auth";
+import {
+  selectCurrentProject,
+  type ProjectContextLoadResult,
+  type SiteCostProjectContext,
+  type SiteCostProjectContextPayload,
+} from "@/lib/project-context-contract";
+
+export type {
+  ProjectContextLoadResult,
+  SiteCostProjectContext,
+  SiteCostProjectContextPayload,
+} from "@/lib/project-context-contract";
+export { selectCurrentProject } from "@/lib/project-context-contract";
 
 export const SITECOST_PROJECT_ID_COOKIE_NAME = "sitecost-project-id";
 
-export type SiteCostProjectContext = {
-  id: string;
-  organization_id: string | null;
-  project_code: string;
-  project_name: string;
-  project_type: string;
-  status: string;
-  enabled_modules: string[];
+export type ProjectContextRequestOptions = {
+  requestedProjectId?: string | null;
 };
-
-export type SiteCostProjectContextPayload = {
-  ok: boolean;
-  auth_mode: "legacy" | "supabase";
-  actor_user_id: string | null;
-  selected_project_id: string | null;
-  projects: SiteCostProjectContext[];
-};
-
-export type ProjectContextLoadResult =
-  | {
-      configured: true;
-      data: SiteCostProjectContextPayload;
-      selectedProject: SiteCostProjectContext | null;
-      error: null;
-    }
-  | {
-      configured: false;
-      data: null;
-      selectedProject: null;
-      error: string;
-    }
-  | {
-      configured: true;
-      data: null;
-      selectedProject: null;
-      error: string;
-    };
 
 const DEFAULT_PROJECT_CONTEXT_API_URL =
   "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/sitecost-project-context-api";
@@ -78,17 +57,20 @@ function normalizeProjectContextPayload(value: unknown): SiteCostProjectContextP
   };
 }
 
-export function selectCurrentProject(payload: SiteCostProjectContextPayload) {
-  if (!payload.selected_project_id) return null;
-  return payload.projects.find((project) => project.id === payload.selected_project_id) ?? null;
-}
-
-export async function getSiteCostProjectContext(): Promise<ProjectContextLoadResult> {
+export async function getSiteCostProjectContext(
+  options: ProjectContextRequestOptions = {},
+): Promise<ProjectContextLoadResult> {
   const apiUrl =
     process.env.SITECOST_PROJECT_CONTEXT_API_URL?.trim() || DEFAULT_PROJECT_CONTEXT_API_URL;
   const cookieStore = await cookies();
   const provider = cookieStore.get(AUTH_PROVIDER_COOKIE_NAME)?.value;
-  const requestedProjectId = cookieStore.get(SITECOST_PROJECT_ID_COOKIE_NAME)?.value?.trim();
+  const cookieProjectId = cookieStore
+    .get(SITECOST_PROJECT_ID_COOKIE_NAME)
+    ?.value?.trim();
+  const requestedProjectId =
+    options.requestedProjectId !== undefined
+      ? options.requestedProjectId?.trim() || undefined
+      : cookieProjectId;
   const headers = new Headers({ "Content-Type": "application/json" });
   const body: Record<string, string> = {};
 
