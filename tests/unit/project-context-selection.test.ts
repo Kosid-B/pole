@@ -3,7 +3,7 @@ import {
   isVerifiedProjectSelection,
   type ProjectContextLoadResult,
   type SiteCostProjectContext,
-} from "@/lib/project-context";
+} from "@/lib/project-context-contract";
 
 const dryingYard: SiteCostProjectContext = {
   id: "project-a",
