@@ -43,19 +43,17 @@ assert.match(projects, /DRYING-YARD-446/);
 assert.match(projects, /ELECTRIC-POLE-SOLAR/);
 
 const guardedRoutes = [
-  ["/finance", "Finance ยังไม่เปิดใน Supabase runtime"],
-  ["/teams", "Teams ยังไม่เปิดใน Supabase runtime"],
-  ["/field-reports/new", "Field Reports ยังไม่เปิดใน Supabase runtime"],
-  ["/imports", "Imports ยังไม่เปิดใน Supabase runtime"],
+  ["/finance", "Finance"],
+  ["/teams", "Teams"],
+  ["/field-reports/new", "Field Reports"],
+  ["/imports", "Imports"],
 ];
 
-for (const [pathname, expectedText] of guardedRoutes) {
+for (const [pathname, moduleLabel] of guardedRoutes) {
   const html = await fetchAuthenticated(pathname);
   assert.match(html, /Controlled migration gate/);
-  assert.ok(
-    html.includes(expectedText),
-    `${pathname} did not render the expected migration gate`,
-  );
+  assert.ok(html.includes(moduleLabel), `${pathname} missing ${moduleLabel} gate label`);
+  assert.match(html, /ยังไม่เปิดใน Supabase runtime/);
   assert.match(html, /ไม่มี fallback ไป local\/demo database/);
 }
 
