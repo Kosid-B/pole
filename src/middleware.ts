@@ -2,13 +2,18 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import {
   canAccessRoute,
-  getDefaultDashboardRoute,
   normalizeRole,
   type AppRole,
 } from "@/lib/permissions";
+import {
+  getLegacyPrismaRouteGate,
+  getRuntimeDefaultDashboardRoute,
+} from "@/lib/runtime-access";
+import type { SiteCostAuthProvider } from "@/lib/supabase-auth";
 
 const USER_ID_COOKIE_NAME = "pm-user-id";
 const ROLE_COOKIE_NAME = "pm-role";
+const AUTH_PROVIDER_COOKIE_NAME = "pm-auth-provider";
 
 function isProtectedPath(pathname: string) {
   return (
@@ -33,9 +38,16 @@ function getRole(request: NextRequest): AppRole | null {
   return normalizeRole(role ?? undefined);
 }
 
+function getProvider(request: NextRequest): SiteCostAuthProvider {
+  return request.cookies.get(AUTH_PROVIDER_COOKIE_NAME)?.value === "supabase"
+    ? "supabase"
+    : "legacy";
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const role = getRole(request);
+  const provider = getProvider(request);
 
   if (pathname === "/sign-in") {
     if (!role) {
@@ -43,7 +55,7 @@ export function middleware(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      new URL(getDefaultDashboardRoute(role), request.url),
+      new URL(getRuntimeDefaultDashboardRoute(role, provider), request.url),
     );
   }
 
@@ -61,8 +73,21 @@ export function middleware(request: NextRequest) {
 
   if (!canAccessRoute(role, pathname)) {
     return NextResponse.redirect(
-      new URL(getDefaultDashboardRoute(role), request.url),
+      new URL(getRuntimeDefaultDashboardRoute(role, provider), request.url),
     );
+  }
+
+  if (provider === "supabase") {
+    const gate = getLegacyPrismaRouteGate(pathname);
+
+    if (gate) {
+      const rewriteUrl = request.nextUrl.clone();
+      rewriteUrl.pathname = "/runtime-migration-gate";
+      rewriteUrl.search = "";
+      rewriteUrl.searchParams.set("gate", gate.key);
+
+      return NextResponse.rewrite(rewriteUrl);
+    }
   }
 
   return NextResponse.next();

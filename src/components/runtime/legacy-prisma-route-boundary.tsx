@@ -2,25 +2,21 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { getSessionAuthProvider } from "@/lib/auth";
 
-type LegacyPrismaRouteBoundaryProps = {
-  children: ReactNode;
+type LegacyPrismaMigrationGateProps = {
   moduleLabel: string;
   replacementHref: string;
   replacementLabel: string;
 };
 
-export async function LegacyPrismaRouteBoundary({
-  children,
+type LegacyPrismaRouteBoundaryProps = LegacyPrismaMigrationGateProps & {
+  children: ReactNode;
+};
+
+export function LegacyPrismaMigrationGate({
   moduleLabel,
   replacementHref,
   replacementLabel,
-}: LegacyPrismaRouteBoundaryProps) {
-  const provider = await getSessionAuthProvider();
-
-  if (provider === "legacy") {
-    return children;
-  }
-
+}: LegacyPrismaMigrationGateProps) {
   return (
     <section className="space-y-5" data-runtime-gate="legacy-prisma">
       <div className="rounded-[1.8rem] border border-amber-300/18 bg-amber-300/[0.055] p-5 sm:p-6">
@@ -45,5 +41,26 @@ export async function LegacyPrismaRouteBoundary({
         </Link>
       </div>
     </section>
+  );
+}
+
+export async function LegacyPrismaRouteBoundary({
+  children,
+  moduleLabel,
+  replacementHref,
+  replacementLabel,
+}: LegacyPrismaRouteBoundaryProps) {
+  const provider = await getSessionAuthProvider();
+
+  if (provider === "legacy") {
+    return children;
+  }
+
+  return (
+    <LegacyPrismaMigrationGate
+      moduleLabel={moduleLabel}
+      replacementHref={replacementHref}
+      replacementLabel={replacementLabel}
+    />
   );
 }
