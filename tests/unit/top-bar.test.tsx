@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { TopBar } from "@/components/layout/top-bar";
-import type { SiteCostProjectContext } from "@/lib/project-context";
+import type { SiteCostProjectContext } from "@/lib/project-context-contract";
 
 const session = {
   user: {
@@ -10,6 +10,8 @@ const session = {
     role: "ADMIN" as const,
   },
 };
+
+const selectProjectAction = async (_formData: FormData) => {};
 
 const dryingYardProject: SiteCostProjectContext = {
   id: "project_drying_yard",
@@ -54,6 +56,7 @@ describe("TopBar", () => {
         projectCount={1}
         projects={[dryingYardProject]}
         selectedProject={dryingYardProject}
+        selectProjectAction={selectProjectAction}
       />,
     );
 
@@ -74,6 +77,7 @@ describe("TopBar", () => {
         selectedProject={dryingYardProject}
         projects={[dryingYardProject, solarProject]}
         projectCount={2}
+        selectProjectAction={selectProjectAction}
       />,
     );
 
