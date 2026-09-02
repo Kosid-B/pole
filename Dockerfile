@@ -6,7 +6,10 @@ FROM ${NODE_IMAGE} AS base
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN npm install --global pnpm@10.33.2
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/* \
+  && npm install --global pnpm@10.33.2
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
@@ -29,7 +32,10 @@ ENV PORT=3000
 ENV TASK3_DATABASE_DIRECTORY=/app/data
 ENV DATABASE_URL=file:/app/data/sitecost.db
 
-RUN groupadd --system --gid 1001 nodejs \
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/* \
+  && groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs \
   && mkdir -p /app/data \
   && chown -R nextjs:nodejs /app/data
