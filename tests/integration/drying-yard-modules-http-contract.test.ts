@@ -1,4 +1,9 @@
-import { createServer, type IncomingHttpHeaders, type Server } from "node:http";
+import {
+  createServer,
+  type IncomingHttpHeaders,
+  type Server,
+  type ServerResponse,
+} from "node:http";
 import { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -42,11 +47,7 @@ const project = {
   status: "active",
 };
 
-function writeJson(
-  response: Parameters<Parameters<typeof createServer>[0]>[1],
-  statusCode: number,
-  payload: unknown,
-) {
+function writeJson(response: ServerResponse, statusCode: number, payload: unknown) {
   response.statusCode = statusCode;
   response.setHeader("Content-Type", "application/json");
   response.end(JSON.stringify(payload));
