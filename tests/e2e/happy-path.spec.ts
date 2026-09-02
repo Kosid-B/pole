@@ -18,7 +18,7 @@ test("admin happy path touches each MVP module", async ({ page }) => {
 
   await openModule("โครงการ", true);
   await expect(
-    page.getByRole("heading", { name: "Project and area management" }),
+    page.getByRole("heading", { name: "พอร์ตโครงการ" }),
   ).toBeVisible();
 
   await openModule("ทีมงาน", true);
