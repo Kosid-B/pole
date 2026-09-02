@@ -1,5 +1,13 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+import { SUPABASE_ACCESS_TOKEN_COOKIE_NAME } from "@/lib/auth";
+import { getSiteCostProjectContext } from "@/lib/project-context";
+import {
+  resolveSelectedModuleProject,
+  type SiteCostModuleCode,
+} from "@/lib/project-module-scope";
+
 type LoadResult<T> =
   | { configured: true; data: T; error: null }
   | { configured: false; data: null; error: string }
@@ -18,6 +26,8 @@ export type CommercialReferencePrice = {
 
 export type CommercialOverview = {
   ok: boolean;
+  project_id?: string;
+  auth_mode?: "legacy" | "supabase";
   label: string;
   summary: {
     site_count: number;
@@ -72,6 +82,8 @@ export type CommercialOverview = {
 
 export type PmOverview = {
   ok: boolean;
+  project_id?: string;
+  auth_mode?: "legacy" | "supabase";
   totals: {
     cost: number;
     sale: number;
@@ -139,6 +151,8 @@ export type ProcurementBid = {
 
 export type ProcurementOverview = {
   ok: boolean;
+  project_id?: string;
+  auth_mode?: "legacy" | "supabase";
   summary: {
     clusters: number;
     sites: number;
@@ -212,42 +226,30 @@ const PROPOSAL_LINK_API_URL =
   process.env.DRYING_YARD_PROPOSAL_LINK_API_URL?.trim() ||
   "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/drying-yard-proposal-link-api";
 
-async function loadAdminModule<T>(
+async function postModule<T>(
   apiUrl: string,
-  action?: string,
+  body: Record<string, string>,
+  headers: Headers,
 ): Promise<LoadResult<T>> {
-  const code = process.env.DRYING_YARD_ADMIN_ACCESS_CODE?.trim();
-
-  if (!code) {
-    return {
-      configured: false,
-      data: null,
-      error:
-        "Set DRYING_YARD_ADMIN_ACCESS_CODE in the server environment. The access code is never sent to the browser.",
-    };
-  }
-
   try {
-    const body = action ? { code, action } : { code };
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
       cache: "no-store",
     });
 
-    const payload = (await response.json()) as T & {
-      error?: string;
-      detail?: string;
-    };
+    const payload = (await response.json().catch(() => null)) as
+      | (T & { error?: string; detail?: string })
+      | null;
 
-    if (!response.ok) {
+    if (!response.ok || !payload) {
       return {
         configured: true,
         data: null,
         error:
-          payload.detail ||
-          payload.error ||
+          payload?.detail ||
+          payload?.error ||
           `Drying-yard module returned HTTP ${response.status}`,
       };
     }
@@ -265,18 +267,123 @@ async function loadAdminModule<T>(
   }
 }
 
+async function loadProjectScopedAdminModule<T>(
+  apiUrl: string,
+  action: string,
+  requiredModule: SiteCostModuleCode,
+): Promise<LoadResult<T>> {
+  const projectContext = await getSiteCostProjectContext();
+
+  if (!projectContext.configured) {
+    return {
+      configured: false,
+      data: null,
+      error: projectContext.error,
+    };
+  }
+
+  if (!projectContext.data) {
+    return {
+      configured: true,
+      data: null,
+      error: projectContext.error,
+    };
+  }
+
+  const scope = resolveSelectedModuleProject(projectContext.data, requiredModule);
+
+  if (!scope.ok) {
+    return {
+      configured: true,
+      data: null,
+      error: scope.error,
+    };
+  }
+
+  const headers = new Headers({ "Content-Type": "application/json" });
+  const body: Record<string, string> = {
+    action,
+    project_id: scope.project.id,
+  };
+
+  if (projectContext.data.auth_mode === "supabase") {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore
+      .get(SUPABASE_ACCESS_TOKEN_COOKIE_NAME)
+      ?.value?.trim();
+
+    if (!accessToken) {
+      return {
+        configured: true,
+        data: null,
+        error: "SUPABASE_SESSION_REQUIRED",
+      };
+    }
+
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  } else {
+    const code = process.env.DRYING_YARD_ADMIN_ACCESS_CODE?.trim();
+
+    if (!code) {
+      return {
+        configured: false,
+        data: null,
+        error:
+          "Set DRYING_YARD_ADMIN_ACCESS_CODE in the server environment. The access code is never sent to the browser.",
+      };
+    }
+
+    body.code = code;
+  }
+
+  return postModule<T>(apiUrl, body, headers);
+}
+
+async function loadLegacyAdminModule<T>(
+  apiUrl: string,
+  action?: string,
+): Promise<LoadResult<T>> {
+  const code = process.env.DRYING_YARD_ADMIN_ACCESS_CODE?.trim();
+
+  if (!code) {
+    return {
+      configured: false,
+      data: null,
+      error:
+        "Set DRYING_YARD_ADMIN_ACCESS_CODE in the server environment. The access code is never sent to the browser.",
+    };
+  }
+
+  const body: Record<string, string> = { code };
+  if (action) body.action = action;
+
+  return postModule<T>(
+    apiUrl,
+    body,
+    new Headers({ "Content-Type": "application/json" }),
+  );
+}
+
 export function getCommercialOverview() {
-  return loadAdminModule<CommercialOverview>(COMMERCIAL_API_URL, "overview");
+  return loadProjectScopedAdminModule<CommercialOverview>(
+    COMMERCIAL_API_URL,
+    "overview",
+    "commercial",
+  );
 }
 
 export function getPmOverview() {
-  return loadAdminModule<PmOverview>(PM_API_URL, "overview");
+  return loadProjectScopedAdminModule<PmOverview>(PM_API_URL, "overview", "pm");
 }
 
 export function getProcurementOverview() {
-  return loadAdminModule<ProcurementOverview>(PM_API_URL, "procurement_overview");
+  return loadProjectScopedAdminModule<ProcurementOverview>(
+    PM_API_URL,
+    "procurement_overview",
+    "procurement",
+  );
 }
 
 export function getCustomerProposalLink() {
-  return loadAdminModule<CustomerProposalLink>(PROPOSAL_LINK_API_URL);
+  return loadLegacyAdminModule<CustomerProposalLink>(PROPOSAL_LINK_API_URL);
 }
