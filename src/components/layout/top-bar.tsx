@@ -1,18 +1,24 @@
 import Link from "next/link";
 import { getChangeAccountHref, signOut, type AppSession } from "@/lib/auth";
 import type { SiteCostProjectContext } from "@/lib/project-context";
+import { selectSiteCostProject } from "@/server/actions/project-context";
 
 type TopBarProps = {
   session: AppSession;
   selectedProject?: SiteCostProjectContext | null;
+  projects?: SiteCostProjectContext[];
   projectCount?: number;
 };
 
 export function TopBar({
   session,
   selectedProject = null,
+  projects = [],
   projectCount = 0,
 }: TopBarProps) {
+  const accessibleProjectCount = projects.length || projectCount;
+  const canSwitchProject = Boolean(selectedProject && projects.length > 1);
+
   return (
     <header className="rounded-[2rem] border border-[var(--panel-border)] bg-[var(--panel-soft)] px-5 py-4 shadow-[0_20px_60px_rgba(2,6,23,0.28)] backdrop-blur sm:px-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -39,7 +45,52 @@ export function TopBar({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          {selectedProject ? (
+          {canSwitchProject && selectedProject ? (
+            <form
+              key={selectedProject.id}
+              action={selectSiteCostProject}
+              aria-label="เปลี่ยนโครงการที่กำลังใช้งาน"
+              className="min-w-0 rounded-2xl border border-cyan-300/25 bg-cyan-300/10 p-3 sm:min-w-[22rem]"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <label
+                  htmlFor="sitecost-project-selector"
+                  className="text-[11px] font-medium text-cyan-100/70"
+                >
+                  โครงการที่ต้องการใช้
+                </label>
+                <Link
+                  href="/projects"
+                  className="text-[11px] font-medium text-cyan-100/70 underline-offset-4 hover:text-cyan-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+                >
+                  ดูพอร์ต
+                </Link>
+              </div>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <select
+                  id="sitecost-project-selector"
+                  name="projectId"
+                  defaultValue={selectedProject.id}
+                  className="min-h-12 min-w-0 flex-1 rounded-xl border border-cyan-100/15 bg-slate-950/80 px-3 py-2 text-sm font-medium text-cyan-50 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+                >
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.project_name} — {project.project_code}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100"
+                >
+                  เปลี่ยนโครงการ
+                </button>
+              </div>
+              <p className="mt-2 truncate text-[11px] text-cyan-100/60">
+                ปัจจุบัน: {selectedProject.project_code} • {selectedProject.enabled_modules.length} modules • {accessibleProjectCount} projects accessible
+              </p>
+            </form>
+          ) : selectedProject ? (
             <Link
               href="/projects"
               aria-label={`ดูโครงการ ${selectedProject.project_name}`}
@@ -51,7 +102,9 @@ export function TopBar({
               </span>
               <span className="mt-0.5 block truncate text-[11px] text-cyan-100/60">
                 {selectedProject.project_code} • {selectedProject.enabled_modules.length} modules
-                {projectCount > 1 ? ` • ${projectCount} projects accessible` : ""}
+                {accessibleProjectCount > 1
+                  ? ` • ${accessibleProjectCount} projects accessible`
+                  : ""}
               </span>
             </Link>
           ) : (
