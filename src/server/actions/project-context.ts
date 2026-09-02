@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
+import { isVerifiedProjectSelection } from "@/lib/project-context-contract";
 import {
   getSiteCostProjectContext,
-  isVerifiedProjectSelection,
   SITECOST_PROJECT_ID_COOKIE_NAME,
 } from "@/lib/project-context";
 
