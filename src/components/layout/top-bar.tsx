@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { getChangeAccountHref, signOut, type AppSession } from "@/lib/auth";
-import type { SiteCostProjectContext } from "@/lib/project-context";
-import { selectSiteCostProject } from "@/server/actions/project-context";
+import type { SiteCostProjectContext } from "@/lib/project-context-contract";
+
+type ProjectSelectionAction = (formData: FormData) => void | Promise<void>;
 
 type TopBarProps = {
   session: AppSession;
   selectedProject?: SiteCostProjectContext | null;
   projects?: SiteCostProjectContext[];
   projectCount?: number;
+  selectProjectAction?: ProjectSelectionAction;
 };
 
 export function TopBar({
@@ -15,9 +17,12 @@ export function TopBar({
   selectedProject = null,
   projects = [],
   projectCount = 0,
+  selectProjectAction,
 }: TopBarProps) {
   const accessibleProjectCount = projects.length || projectCount;
-  const canSwitchProject = Boolean(selectedProject && projects.length > 1);
+  const canSwitchProject = Boolean(
+    selectedProject && projects.length > 1 && selectProjectAction,
+  );
 
   return (
     <header className="rounded-[2rem] border border-[var(--panel-border)] bg-[var(--panel-soft)] px-5 py-4 shadow-[0_20px_60px_rgba(2,6,23,0.28)] backdrop-blur sm:px-6">
@@ -45,10 +50,10 @@ export function TopBar({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          {canSwitchProject && selectedProject ? (
+          {canSwitchProject && selectedProject && selectProjectAction ? (
             <form
               key={selectedProject.id}
-              action={selectSiteCostProject}
+              action={selectProjectAction}
               aria-label="เปลี่ยนโครงการที่กำลังใช้งาน"
               className="min-w-0 rounded-2xl border border-cyan-300/25 bg-cyan-300/10 p-3 sm:min-w-[22rem]"
             >
