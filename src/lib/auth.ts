@@ -81,6 +81,8 @@ export async function clearSessionCookies() {
   cookieStore.delete(EMAIL_COOKIE_NAME);
   cookieStore.delete(AUTH_PROVIDER_COOKIE_NAME);
   cookieStore.delete(SUPABASE_ACCESS_TOKEN_COOKIE_NAME);
+  // Project scope is session-bound. A new account must never inherit the prior account's project.
+  cookieStore.delete("sitecost-project-id");
 }
 
 export async function clearSessionAndRedirect(
@@ -268,6 +270,10 @@ export async function signInWithPassword(formData: FormData) {
   } else {
     cookieStore.delete(SUPABASE_ACCESS_TOKEN_COOKIE_NAME);
   }
+
+  // A new login starts without inherited project scope. Project Context will select
+  // the first authorized project until the user explicitly chooses another one.
+  cookieStore.delete("sitecost-project-id");
 
   redirect(sanitizeRedirect(redirectTo, session.user.role));
 }
