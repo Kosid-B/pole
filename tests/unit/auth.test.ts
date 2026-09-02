@@ -34,6 +34,16 @@ describe("getSafeRedirectTarget", () => {
       getDefaultDashboardRoute("FIELD_LEADER"),
     );
   });
+
+  it("does not redirect Supabase sessions into legacy Prisma routes", () => {
+    expect(getSafeRedirectTarget("/finance", "ADMIN", "supabase")).toBe("/");
+    expect(
+      getSafeRedirectTarget("/field-reports/new", "FIELD_LEADER", "supabase"),
+    ).toBe("/field-readiness");
+    expect(
+      getSafeRedirectTarget("/field-readiness", "FIELD_LEADER", "supabase"),
+    ).toBe("/field-readiness");
+  });
 });
 
 describe("database auth", () => {
