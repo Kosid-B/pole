@@ -46,6 +46,10 @@ export type ProjectContextLoadResult =
       error: string;
     };
 
+export type ProjectContextRequestOptions = {
+  requestedProjectId?: string | null;
+};
+
 const DEFAULT_PROJECT_CONTEXT_API_URL =
   "https://erweztmbezbwbjzwjxqt.supabase.co/functions/v1/sitecost-project-context-api";
 
@@ -83,12 +87,35 @@ export function selectCurrentProject(payload: SiteCostProjectContextPayload) {
   return payload.projects.find((project) => project.id === payload.selected_project_id) ?? null;
 }
 
-export async function getSiteCostProjectContext(): Promise<ProjectContextLoadResult> {
+export function isVerifiedProjectSelection(
+  result: ProjectContextLoadResult,
+  requestedProjectId: string,
+) {
+  return Boolean(
+    requestedProjectId &&
+      result.configured &&
+      result.data &&
+      result.error === null &&
+      result.data.selected_project_id === requestedProjectId &&
+      result.selectedProject?.id === requestedProjectId &&
+      result.data.projects.some((project) => project.id === requestedProjectId),
+  );
+}
+
+export async function getSiteCostProjectContext(
+  options: ProjectContextRequestOptions = {},
+): Promise<ProjectContextLoadResult> {
   const apiUrl =
     process.env.SITECOST_PROJECT_CONTEXT_API_URL?.trim() || DEFAULT_PROJECT_CONTEXT_API_URL;
   const cookieStore = await cookies();
   const provider = cookieStore.get(AUTH_PROVIDER_COOKIE_NAME)?.value;
-  const requestedProjectId = cookieStore.get(SITECOST_PROJECT_ID_COOKIE_NAME)?.value?.trim();
+  const cookieProjectId = cookieStore
+    .get(SITECOST_PROJECT_ID_COOKIE_NAME)
+    ?.value?.trim();
+  const requestedProjectId =
+    options.requestedProjectId !== undefined
+      ? options.requestedProjectId?.trim() || undefined
+      : cookieProjectId;
   const headers = new Headers({ "Content-Type": "application/json" });
   const body: Record<string, string> = {};
 
