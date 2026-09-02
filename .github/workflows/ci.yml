@@ -100,6 +100,11 @@ jobs:
           docker logs sitecost-ci
           exit 1
 
+      - name: Run runtime integration flow
+        env:
+          SITECOST_RUNTIME_BASE_URL: http://127.0.0.1:3000
+        run: node tests/runtime/auth-db.integration.mjs
+
       - name: Cleanup Docker contract resources
         if: always()
         run: |
