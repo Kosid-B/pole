@@ -1,5 +1,7 @@
 import {
   canUseRouteInRuntime,
+  getLegacyPrismaRouteGate,
+  getLegacyPrismaRouteGateByKey,
   getRuntimeDefaultDashboardRoute,
   isLegacyPrismaRoute,
 } from "@/lib/runtime-access";
@@ -12,6 +14,24 @@ describe("Supabase runtime route policy", () => {
     expect(isLegacyPrismaRoute("/imports/review/123")).toBe(true);
     expect(isLegacyPrismaRoute("/pm/financial")).toBe(false);
     expect(isLegacyPrismaRoute("/field-readiness")).toBe(false);
+  });
+
+  it("maps blocked prefixes to trusted migration gate metadata", () => {
+    expect(getLegacyPrismaRouteGate("/finance/costs")).toMatchObject({
+      key: "finance",
+      moduleLabel: "Finance",
+      replacementHref: "/pm/financial",
+    });
+    expect(getLegacyPrismaRouteGate("/field-reports/new")).toMatchObject({
+      key: "field-reports",
+      moduleLabel: "Field Reports",
+      replacementHref: "/field-readiness",
+    });
+    expect(getLegacyPrismaRouteGateByKey("imports")).toMatchObject({
+      prefix: "/imports",
+      replacementHref: "/projects",
+    });
+    expect(getLegacyPrismaRouteGateByKey("unknown")).toBeNull();
   });
 
   it("keeps legacy runtime unchanged", () => {
