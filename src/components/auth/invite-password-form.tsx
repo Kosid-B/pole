@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { validateInvitePassword } from "@/lib/invite-password";
 
 type InvitePasswordFormProps = {
@@ -43,6 +43,11 @@ export function InvitePasswordForm({
     () => validateInvitePassword(password, confirmPassword),
     [password, confirmPassword],
   );
+  const passwordTooShort = password.length > 0 && password.length < 12;
+  const passwordMismatch =
+    password.length >= 12 &&
+    confirmPassword.length > 0 &&
+    password !== confirmPassword;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,6 +134,8 @@ export function InvitePasswordForm({
           minLength={12}
           autoComplete="new-password"
           disabled={disabled}
+          aria-invalid={passwordTooShort}
+          aria-describedby="new-password-help"
           value={password}
           onChange={(event) => {
             setPassword(event.target.value);
@@ -139,7 +146,14 @@ export function InvitePasswordForm({
           }}
           className="min-h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition disabled:cursor-not-allowed disabled:opacity-50 focus:border-sky-300/50 focus-visible:ring-2 focus-visible:ring-sky-300/50"
         />
-        <p className="text-xs leading-5 text-slate-400">อย่างน้อย 12 ตัวอักษร และควรเป็นรหัสที่ไม่ใช้ซ้ำกับระบบอื่น</p>
+        <p
+          id="new-password-help"
+          className={`text-xs leading-5 ${passwordTooShort ? "text-amber-200" : "text-slate-400"}`}
+        >
+          {passwordTooShort
+            ? `ต้องเพิ่มอีก ${12 - password.length} ตัวอักษร`
+            : "อย่างน้อย 12 ตัวอักษร และควรเป็นรหัสที่ไม่ใช้ซ้ำกับระบบอื่น"}
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -153,6 +167,8 @@ export function InvitePasswordForm({
           minLength={12}
           autoComplete="new-password"
           disabled={disabled}
+          aria-invalid={passwordMismatch}
+          aria-describedby="confirm-password-help"
           value={confirmPassword}
           onChange={(event) => {
             setConfirmPassword(event.target.value);
@@ -163,12 +179,18 @@ export function InvitePasswordForm({
           }}
           className="min-h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition disabled:cursor-not-allowed disabled:opacity-50 focus:border-sky-300/50 focus-visible:ring-2 focus-visible:ring-sky-300/50"
         />
+        <p
+          id="confirm-password-help"
+          className={`text-xs leading-5 ${passwordMismatch ? "text-amber-200" : "text-slate-500"}`}
+        >
+          {passwordMismatch ? "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน" : "พิมพ์รหัสผ่านเดิมอีกครั้งเพื่อยืนยัน"}
+        </p>
       </div>
 
       <button
         type="submit"
         disabled={disabled || !password || !confirmPassword || !validation.ok}
-        className="min-h-12 w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-12 w-full rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
       >
         {status === "saving" ? "กำลังบันทึก..." : "ตั้งรหัสผ่านและเปิดใช้งานบัญชี"}
       </button>
