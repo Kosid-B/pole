@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 
 const baseUrl = process.env.SITECOST_RUNTIME_BASE_URL || "http://127.0.0.1:3001";
 const cookie = [
+  "pm-user-id=user-ci-supabase",
+  "pm-role=ADMIN",
+  "pm-email=ci-supabase%40example.com",
   "pm-auth-provider=supabase",
   "pm-supabase-access-token=ci-supabase-token",
   "sitecost-project-id=project-drying-yard",
