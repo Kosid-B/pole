@@ -13,6 +13,7 @@ export default async function DashboardLayout({
 }: DashboardLayoutProps) {
   const session = await requireSession();
   const projectContext = await getSiteCostProjectContext();
+  const authorizedProjects = projectContext.data?.projects ?? [];
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-4 lg:flex-row lg:px-6 lg:py-6">
@@ -21,7 +22,8 @@ export default async function DashboardLayout({
         <TopBar
           session={session}
           selectedProject={projectContext.selectedProject}
-          projectCount={projectContext.data?.projects.length ?? 0}
+          projects={authorizedProjects}
+          projectCount={authorizedProjects.length}
         />
         <main className="rounded-[2rem] border border-[var(--panel-border)] bg-[var(--panel)] p-5 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.35)] backdrop-blur sm:p-6 lg:p-8">
           {children}
