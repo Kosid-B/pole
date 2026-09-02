@@ -1,13 +1,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/passwords";
 import {
   type AppRole,
   canAccessRoute,
-  getDefaultDashboardRoute,
   normalizeRole,
 } from "@/lib/permissions";
+import {
+  canUseRouteInRuntime,
+  getRuntimeDefaultDashboardRoute,
+} from "@/lib/runtime-access";
 import {
   getConfiguredAuthProvider,
   getSupabaseSiteCostIdentity,
@@ -36,12 +38,20 @@ export type AuthenticatedSessionSeed = AppSession & {
   expiresIn?: number;
 };
 
+async function getLegacyDb() {
+  const { db } = await import("@/lib/db");
+  return db;
+}
+
 export function getSafeRedirectTarget(
   pathname: string | null | undefined,
   role: AppRole,
+  provider: SiteCostAuthProvider = "legacy",
 ) {
+  const fallback = getRuntimeDefaultDashboardRoute(role, provider);
+
   if (!pathname) {
-    return getDefaultDashboardRoute(role);
+    return fallback;
   }
 
   const normalizedPath = pathname.trim();
@@ -51,15 +61,18 @@ export function getSafeRedirectTarget(
     normalizedPath.startsWith("//") ||
     normalizedPath.includes("\\")
   ) {
-    return getDefaultDashboardRoute(role);
+    return fallback;
   }
 
   if (/[\r\n\t]/.test(normalizedPath)) {
-    return getDefaultDashboardRoute(role);
+    return fallback;
   }
 
-  if (!canAccessRoute(role, normalizedPath)) {
-    return getDefaultDashboardRoute(role);
+  if (
+    !canAccessRoute(role, normalizedPath) ||
+    !canUseRouteInRuntime(provider, normalizedPath)
+  ) {
+    return fallback;
   }
 
   return normalizedPath;
@@ -71,6 +84,13 @@ export function getChangeAccountHref() {
   });
 
   return `/sign-out?${params.toString()}`;
+}
+
+export async function getSessionAuthProvider(): Promise<SiteCostAuthProvider> {
+  const cookieStore = await cookies();
+  return cookieStore.get(AUTH_PROVIDER_COOKIE_NAME)?.value === "supabase"
+    ? "supabase"
+    : "legacy";
 }
 
 export async function clearSessionCookies() {
@@ -95,8 +115,12 @@ export async function clearSessionAndRedirect(
   redirect(destination);
 }
 
-function sanitizeRedirect(pathname: string | null | undefined, role: AppRole) {
-  return getSafeRedirectTarget(pathname, role);
+function sanitizeRedirect(
+  pathname: string | null | undefined,
+  role: AppRole,
+  provider: SiteCostAuthProvider,
+) {
+  return getSafeRedirectTarget(pathname, role, provider);
 }
 
 export function getSafeSignOutRedirectTarget(pathname: string | null | undefined) {
@@ -120,6 +144,7 @@ export function getSafeSignOutRedirectTarget(pathname: string | null | undefined
 
 export async function verifyPasswordForUser(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
+  const db = await getLegacyDb();
   const user = await db.user.findUnique({
     where: { email: normalizedEmail },
   });
@@ -204,6 +229,7 @@ export async function getSession() {
     return null;
   }
 
+  const db = await getLegacyDb();
   const user = await db.user.findUnique({
     where: { id: userId },
   });
@@ -275,7 +301,7 @@ export async function signInWithPassword(formData: FormData) {
   // the first authorized project until the user explicitly chooses another one.
   cookieStore.delete("sitecost-project-id");
 
-  redirect(sanitizeRedirect(redirectTo, session.user.role));
+  redirect(sanitizeRedirect(redirectTo, session.user.role, session.provider));
 }
 
 export async function signOut() {

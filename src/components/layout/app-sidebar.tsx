@@ -9,9 +9,12 @@ import {
   type NavItem,
   type NavSection,
 } from "@/lib/permissions";
+import { canUseRouteInRuntime } from "@/lib/runtime-access";
+import type { SiteCostAuthProvider } from "@/lib/supabase-auth";
 
 type AppSidebarProps = {
   session: AppSession;
+  authProvider: SiteCostAuthProvider;
 };
 
 const sectionMeta: Array<{
@@ -63,9 +66,11 @@ function NavigationLink({ item, pathname, compact = false }: {
   );
 }
 
-export function AppSidebar({ session }: AppSidebarProps) {
+export function AppSidebar({ session, authProvider }: AppSidebarProps) {
   const pathname = usePathname();
-  const navItems = getNavigationForRole(session.user.role);
+  const navItems = getNavigationForRole(session.user.role).filter((item) =>
+    canUseRouteInRuntime(authProvider, item.href),
+  );
 
   const groups = sectionMeta
     .map((section) => ({

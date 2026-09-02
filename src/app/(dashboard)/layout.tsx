@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
-import { requireSession } from "@/lib/auth";
+import { getSessionAuthProvider, requireSession } from "@/lib/auth";
 import { getSiteCostProjectContext } from "@/lib/project-context";
 import { selectSiteCostProject } from "@/server/actions/project-context";
 
@@ -13,12 +13,15 @@ export default async function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const session = await requireSession();
-  const projectContext = await getSiteCostProjectContext();
+  const [authProvider, projectContext] = await Promise.all([
+    getSessionAuthProvider(),
+    getSiteCostProjectContext(),
+  ]);
   const authorizedProjects = projectContext.data?.projects ?? [];
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-4 lg:flex-row lg:px-6 lg:py-6">
-      <AppSidebar session={session} />
+      <AppSidebar session={session} authProvider={authProvider} />
       <div className="flex-1 space-y-6">
         <TopBar
           session={session}
