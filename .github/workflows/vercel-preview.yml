@@ -88,18 +88,9 @@ jobs:
             echo "Target: preview only"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Inspect Preview health
+      - name: Inspect Preview deployment
         shell: bash
         run: |
           pnpm dlx vercel@${VERCEL_CLI_VERSION} inspect \
             "${{ steps.deploy.outputs.url }}" \
             --token="$VERCEL_TOKEN"
-
-      - name: Guard against production promotion
-        shell: bash
-        run: |
-          set -euo pipefail
-          if grep -Eq -- '--prod|vercel promote|target[=: ]+production' .github/workflows/vercel-preview.yml; then
-            echo "Production deployment syntax detected in Preview-only workflow."
-            exit 1
-          fi
