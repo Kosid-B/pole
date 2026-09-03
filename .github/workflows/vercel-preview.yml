@@ -1,0 +1,96 @@
+name: Vercel Preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sitecost-vercel-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-24.04
+    env:
+      VERCEL_ORG_ID: team_oryw9VGF4TLakA4qBU6pGx43
+      VERCEL_PROJECT_ID: prj_LdSJHSRZrV1G3RORdcNMpjvkkBGr
+      VERCEL_CLI_VERSION: 59.11.2
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Validate canonical preview credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "VERCEL_TOKEN is not configured; refusing to deploy."
+            exit 1
+          fi
+          test "$VERCEL_ORG_ID" = "team_oryw9VGF4TLakA4qBU6pGx43"
+          test "$VERCEL_PROJECT_ID" = "prj_LdSJHSRZrV1G3RORdcNMpjvkkBGr"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull canonical Preview settings
+        shell: bash
+        run: |
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} pull \
+            --yes \
+            --environment=preview \
+            --token="$VERCEL_TOKEN"
+
+      - name: Build Preview artifact
+        shell: bash
+        run: |
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} build \
+            --token="$VERCEL_TOKEN"
+
+      - name: Deploy Preview artifact
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} deploy \
+            --prebuilt \
+            --yes \
+            --token="$VERCEL_TOKEN" \
+            2>&1 | tee /tmp/vercel-preview.log
+
+          PREVIEW_URL="$(grep -Eo 'https://[^ ]+\.vercel\.app' /tmp/vercel-preview.log | tail -n 1)"
+          if [ -z "$PREVIEW_URL" ]; then
+            echo "Preview deployment completed without a parseable deployment URL."
+            exit 1
+          fi
+
+          echo "url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+          {
+            echo "## SiteCost Vercel Preview"
+            echo
+            echo "Deployment: $PREVIEW_URL"
+            echo "Project ID: $VERCEL_PROJECT_ID"
+            echo "Target: preview only"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Inspect Preview deployment
+        shell: bash
+        run: |
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} inspect \
+            "${{ steps.deploy.outputs.url }}" \
+            --token="$VERCEL_TOKEN"
