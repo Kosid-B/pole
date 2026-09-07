@@ -1,5 +1,6 @@
 name: One-shot Production Dispatch Launcher
 
+# One-shot launcher: dispatch canonical production after explicit operator authorization.
 on:
   push:
     branches:
