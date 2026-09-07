@@ -16,15 +16,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy-production:
+  verify-production:
     runs-on: windows-latest
     environment: production
     env:
       VERCEL_ORG_ID: team_oryw9VGF4TLakA4qBU6pGx43
       VERCEL_PROJECT_ID: prj_LdSJHSRZrV1G3RORdcNMpjvkkBGr
-      VERCEL_CLI_VERSION: 59.11.2
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      CANONICAL_PRODUCTION_URL: https://sitecost-lantak-os.vercel.app
 
     steps:
       - name: Validate explicit production authorization
@@ -68,65 +66,118 @@ jobs:
       - name: Run unit and integration tests
         run: pnpm test
 
-      - name: Pull canonical Production settings
-        shell: pwsh
-        run: pnpm dlx vercel@$env:VERCEL_CLI_VERSION pull --yes --environment=production --token="$env:VERCEL_TOKEN"
+  deploy-production:
+    needs: verify-production
+    runs-on: ubuntu-24.04
+    environment: production
+    env:
+      VERCEL_ORG_ID: team_oryw9VGF4TLakA4qBU6pGx43
+      VERCEL_PROJECT_ID: prj_LdSJHSRZrV1G3RORdcNMpjvkkBGr
+      VERCEL_CLI_VERSION: 59.11.2
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      CANONICAL_PRODUCTION_URL: https://sitecost-lantak-os.vercel.app
 
-      - name: Build Production artifact
-        shell: pwsh
-        run: pnpm dlx vercel@$env:VERCEL_CLI_VERSION build --prod --token="$env:VERCEL_TOKEN"
+    steps:
+      - name: Checkout authoritative source
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull canonical Production settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} pull \
+            --yes \
+            --environment=production \
+            --token="$VERCEL_TOKEN"
+
+      - name: Build Production artifact on Linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} build \
+            --prod \
+            --token="$VERCEL_TOKEN"
 
       - name: Deploy Production artifact
         id: deploy
-        shell: pwsh
+        shell: bash
         run: |
-          $output = pnpm dlx vercel@$env:VERCEL_CLI_VERSION deploy --prebuilt --prod --yes --token="$env:VERCEL_TOKEN" 2>&1 | Tee-Object -Variable deployLog
-          $text = ($deployLog | Out-String)
-          $matches = [regex]::Matches($text, 'https://[^\s]+\.vercel\.app')
-          if ($matches.Count -eq 0) { throw "Production deployment completed without a parseable deployment URL." }
-          $deploymentUrl = $matches[$matches.Count - 1].Value
-          "url=$deploymentUrl" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          @"
-          ## SiteCost Vercel Production
+          set -euo pipefail
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} deploy \
+            --prebuilt \
+            --prod \
+            --yes \
+            --token="$VERCEL_TOKEN" \
+            2>&1 | tee /tmp/vercel-production.log
 
-          Source SHA: $env:GITHUB_SHA
-          Deployment: $deploymentUrl
-          Canonical domain: $env:CANONICAL_PRODUCTION_URL
-          Project ID: $env:VERCEL_PROJECT_ID
-          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          DEPLOYMENT_URL="$(grep -Eo 'https://[^ ]+\.vercel\.app' /tmp/vercel-production.log | tail -n 1)"
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "Production deployment completed without a parseable deployment URL."
+            exit 1
+          fi
+
+          echo "url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
+          {
+            echo "## SiteCost Vercel Production"
+            echo
+            echo "Source SHA: $GITHUB_SHA"
+            echo "Deployment: $DEPLOYMENT_URL"
+            echo "Canonical domain: $CANONICAL_PRODUCTION_URL"
+            echo "Project ID: $VERCEL_PROJECT_ID"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Inspect Production deployment
-        shell: pwsh
-        run: pnpm dlx vercel@$env:VERCEL_CLI_VERSION inspect "${{ steps.deploy.outputs.url }}" --token="$env:VERCEL_TOKEN"
+        shell: bash
+        run: |
+          pnpm dlx vercel@${VERCEL_CLI_VERSION} inspect \
+            "${{ steps.deploy.outputs.url }}" \
+            --token="$VERCEL_TOKEN"
 
       - name: Verify deployment health endpoint
-        shell: pwsh
+        shell: bash
         run: |
-          $healthUrl = "${{ steps.deploy.outputs.url }}/api/health"
-          for ($attempt = 1; $attempt -le 30; $attempt++) {
-            try {
-              $body = (Invoke-WebRequest -UseBasicParsing -Uri $healthUrl -TimeoutSec 10).Content
-              if ($body -match '"ok":true' -and $body -match '"service":"sitecost-project-management-saas"' -and $body -match '"runtime":"nextjs"') {
-                Write-Output $body
-                exit 0
-              }
-            } catch {}
-            Start-Sleep -Seconds 2
-          }
-          throw "Production health contract failed: $healthUrl"
+          set -euo pipefail
+          HEALTH_URL="${{ steps.deploy.outputs.url }}/api/health"
+          for attempt in {1..30}; do
+            BODY="$(curl --fail --silent --show-error "$HEALTH_URL" || true)"
+            if printf '%s' "$BODY" | grep -q '"ok":true' \
+              && printf '%s' "$BODY" | grep -q '"service":"sitecost-project-management-saas"' \
+              && printf '%s' "$BODY" | grep -q '"runtime":"nextjs"'; then
+              echo "$BODY"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Production health contract failed: $HEALTH_URL"
+          exit 1
 
       - name: Verify canonical production domain
-        shell: pwsh
+        shell: bash
         run: |
-          $healthUrl = "$env:CANONICAL_PRODUCTION_URL/api/health"
-          for ($attempt = 1; $attempt -le 30; $attempt++) {
-            try {
-              $body = (Invoke-WebRequest -UseBasicParsing -Uri $healthUrl -TimeoutSec 10).Content
-              if ($body -match '"ok":true' -and $body -match '"service":"sitecost-project-management-saas"' -and $body -match '"runtime":"nextjs"') {
-                Write-Output $body
-                exit 0
-              }
-            } catch {}
-            Start-Sleep -Seconds 2
-          }
-          throw "Canonical production domain health contract failed: $healthUrl"
+          set -euo pipefail
+          for attempt in {1..30}; do
+            BODY="$(curl --fail --silent --show-error "$CANONICAL_PRODUCTION_URL/api/health" || true)"
+            if printf '%s' "$BODY" | grep -q '"ok":true' \
+              && printf '%s' "$BODY" | grep -q '"service":"sitecost-project-management-saas"' \
+              && printf '%s' "$BODY" | grep -q '"runtime":"nextjs"'; then
+              echo "$BODY"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Canonical production domain health contract failed: $CANONICAL_PRODUCTION_URL/api/health"
+          exit 1
