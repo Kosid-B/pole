@@ -1,6 +1,6 @@
 name: One-shot Production Dispatch Launcher
 
-# One-shot launcher: dispatch canonical production after deployment-protection gate fix.
+# One-shot launcher: dispatch canonical production for Dynamic GM Engine release.
 on:
   push:
     branches:
