@@ -5,6 +5,35 @@ type LoadResult<T> =
   | { configured: false; data: null; error: string }
   | { configured: true; data: null; error: string };
 
+export type DynamicGmAdvice = {
+  recommended_gm: number;
+  financial_risk_tier: "CONTROLLED" | "MEDIUM" | "HIGH" | "CRITICAL";
+  dynamic_gm_gate: string;
+  confirmed_quotes: number;
+  confirmed_quote_groups: number;
+  min_quotes: number;
+  modeled_safety_reserve: number | null;
+  recommended_selling_price_pre_vat: number | null;
+};
+
+export type GmSensitivityRow = {
+  scope_type: "PROJECT" | "PROVINCE";
+  scope_name: string;
+  source_ref: string;
+  source_date: string | null;
+  gm: number;
+  implied_cost_pre_vat: number;
+  selling_price_pre_vat: number;
+  selling_price_vat: number;
+  gross_profit_pre_vat: number;
+  cost_overrun_buffer_pct_of_cost: number;
+  break_even_overrun_amount: number;
+  modeled_advance_cash_vat: number;
+  modeled_safety_reserve: number;
+  modeled_funding_gap_days: number;
+  evidence_status: string;
+};
+
 export type SiteCostSummary = {
   project_id: string;
   site_id: string;
@@ -25,6 +54,7 @@ export type SiteCostSummary = {
   gross_margin: number | null;
   cost_confirmation_status: string;
   commercial_gate: string;
+  dynamic_gm?: DynamicGmAdvice | null;
 };
 
 export type SiteMaterialCost = {
@@ -71,7 +101,7 @@ export type SiteSupplier = {
 export type SiteCostOverview = {
   ok: true;
   label: string;
-  summary: { sites: number; go: number; hold: number; confirmed: number; unconfirmed: number };
+  summary: { sites: number; go: number; hold: number; confirmed: number; unconfirmed: number; dynamic_review_eligible?: number };
   sites: SiteCostSummary[];
   rule: string;
 };
@@ -79,6 +109,7 @@ export type SiteCostOverview = {
 export type SiteCostDetail = {
   ok: true;
   summary: SiteCostSummary;
+  dynamic_gm: DynamicGmAdvice | null;
   materials: SiteMaterialCost[];
   freight: Array<Record<string, unknown>>;
   equipment: SiteRateCost[];
@@ -131,6 +162,10 @@ export function getSiteCostOverview() {
 
 export function getSiteCostDetail(siteId: string) {
   return postSiteCostApi<SiteCostDetail>("site_detail", { site_id: siteId });
+}
+
+export function getGmSensitivity(scopeName?: string) {
+  return postSiteCostApi<{ ok: true; scenarios: GmSensitivityRow[]; rule: string }>("gm_sensitivity", scopeName ? { scope_name: scopeName } : {});
 }
 
 export function applySiteMaterialQuote(payload: Record<string, unknown>) {
