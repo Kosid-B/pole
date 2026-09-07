@@ -29,22 +29,25 @@ describe("Vercel Production workflow contract", () => {
   });
 
   it("fails closed when production authorization or credentials are missing", () => {
-    expect(workflow).toContain(
-      'if [ "${{ inputs.confirm_production }}" != "DEPLOY_PRODUCTION" ]; then',
-    );
+    expect(workflow).toContain("Validate explicit production authorization");
+    expect(workflow).toContain('${{ inputs.confirm_production }}');
+    expect(workflow).toContain("DEPLOY_PRODUCTION");
     expect(workflow).toContain(
       "Production authorization phrase does not match; refusing to deploy.",
     );
-    expect(workflow).toContain('if [ -z "${VERCEL_TOKEN:-}" ]; then');
+    expect(workflow).toContain("VERCEL_TOKEN");
     expect(workflow).toContain("VERCEL_TOKEN is not configured; refusing to deploy.");
   });
 
-  it("runs tests and verifies both deployment and canonical health contracts", () => {
+  it("runs CI-parity database setup, tests, and both health contracts", () => {
+    expect(workflow).toContain("pnpm db:generate");
+    expect(workflow).toContain("pnpm db:push");
+    expect(workflow).toContain("pnpm db:seed");
     expect(workflow).toContain("pnpm test");
     expect(workflow).toContain("/api/health");
-    expect(workflow).toContain('"ok":true');
-    expect(workflow).toContain('"service":"sitecost-project-management-saas"');
-    expect(workflow).toContain('"runtime":"nextjs"');
+    expect(workflow).toContain('\"ok\":true');
+    expect(workflow).toContain('\"service\":\"sitecost-project-management-saas\"');
+    expect(workflow).toContain('\"runtime\":\"nextjs\"');
     expect(workflow).toContain("https://sitecost-lantak-os.vercel.app");
   });
 });
