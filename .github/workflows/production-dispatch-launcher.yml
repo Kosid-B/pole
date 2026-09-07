@@ -1,6 +1,6 @@
 name: One-shot Production Dispatch Launcher
 
-# One-shot launcher: dispatch canonical production after Linux artifact fix.
+# One-shot launcher: dispatch canonical production after deployment-protection gate fix.
 on:
   push:
     branches:
