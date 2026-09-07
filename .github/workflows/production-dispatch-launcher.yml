@@ -1,6 +1,6 @@
 name: One-shot Production Dispatch Launcher
 
-# One-shot launcher: dispatch canonical production after workflow contract test fix.
+# One-shot launcher: dispatch canonical production after Linux artifact fix.
 on:
   push:
     branches:
