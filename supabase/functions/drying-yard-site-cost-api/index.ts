@@ -28,11 +28,18 @@ async function authenticateAdmin(db: any, code: string) {
 }
 
 async function overview(db: any, pid: string, label: string) {
-  const { data, error } = await db.from("drying_yard_site_cost_summary_v")
-    .select("project_id,site_id,site_code,installation_type,province,district,subdistrict,material_cost,freight_cost,equipment_cost,labor_cost,total_site_cost,final_price_vat,selling_price_pre_vat,target_gross_margin,unconfirmed_cost_lines,gross_margin,cost_confirmation_status,commercial_gate")
-    .eq("project_id", pid).order("site_code");
-  if (error) throw error;
-  const rows = data || [];
+  const [summaryResult, gmResult] = await Promise.all([
+    db.from("drying_yard_site_cost_summary_v")
+      .select("project_id,site_id,site_code,installation_type,province,district,subdistrict,material_cost,freight_cost,equipment_cost,labor_cost,total_site_cost,final_price_vat,selling_price_pre_vat,target_gross_margin,unconfirmed_cost_lines,gross_margin,cost_confirmation_status,commercial_gate")
+      .eq("project_id", pid).order("site_code"),
+    db.from("drying_yard_site_dynamic_gm_v")
+      .select("site_id,recommended_gm,financial_risk_tier,dynamic_gm_gate,confirmed_quotes,confirmed_quote_groups,min_quotes,modeled_safety_reserve,recommended_selling_price_pre_vat")
+      .eq("project_id", pid),
+  ]);
+  if (summaryResult.error) throw summaryResult.error;
+  if (gmResult.error) throw gmResult.error;
+  const gmBySite = new Map((gmResult.data || []).map((r: any) => [r.site_id, r]));
+  const rows = (summaryResult.data || []).map((r: any) => ({ ...r, dynamic_gm: gmBySite.get(r.site_id) || null }));
   return json({
     ok: true,
     label,
@@ -40,28 +47,43 @@ async function overview(db: any, pid: string, label: string) {
       sites: rows.length,
       go: rows.filter((r: any) => r.commercial_gate === "GO").length,
       hold: rows.filter((r: any) => r.commercial_gate !== "GO").length,
-      confirmed: rows.filter((r: any) => r.cost_confirmation_status === "confirmed").length,
-      unconfirmed: rows.filter((r: any) => r.cost_confirmation_status !== "confirmed").length,
+      confirmed: rows.filter((r: any) => String(r.cost_confirmation_status).toUpperCase() === "CONFIRMED").length,
+      unconfirmed: rows.filter((r: any) => String(r.cost_confirmation_status).toUpperCase() !== "CONFIRMED").length,
+      dynamic_review_eligible: rows.filter((r: any) => r.dynamic_gm?.dynamic_gm_gate === "ELIGIBLE_FOR_GM_REVIEW").length,
     },
     sites: rows,
-    rule: "GM is evaluated only when all site cost lines are confirmed. Target GM must be at least 32% (project setting).",
+    rule: "Dynamic GM is advisory and fail-closed. It never lowers the approved target while site cost evidence, RFQ coverage, or cash terms are incomplete.",
   });
 }
 
 async function siteDetail(db: any, pid: string, body: Record<string, unknown>) {
   const siteId = String(body.site_id || "").trim();
   if (!siteId) return json({ error: "SITE_REQUIRED" }, 400);
-  const [summary, materials, freight, equipment, labor, suppliers] = await Promise.all([
+  const [summary, dynamicGm, materials, freight, equipment, labor, suppliers] = await Promise.all([
     db.from("drying_yard_site_cost_summary_v").select("*").eq("project_id", pid).eq("site_id", siteId).maybeSingle(),
+    db.from("drying_yard_site_dynamic_gm_v").select("*").eq("project_id", pid).eq("site_id", siteId).maybeSingle(),
     db.from("drying_yard_site_material_costs").select("id,item_code,material_group,item_name,qty,unit,unit_price,surcharge_amount,discount_amount,pricing_status,valid_until,evidence_ref,supplier_quote_id").eq("project_id", pid).eq("site_id", siteId).order("item_code"),
     db.from("drying_yard_site_freight_costs").select("id,supplier_quote_id,material_group,origin_name,distance_km,vehicle_type,amount,pricing_status,valid_until,evidence_ref").eq("project_id", pid).eq("site_id", siteId).order("created_at"),
     db.from("drying_yard_site_equipment_costs").select("id,equipment_code,equipment_name,qty,unit,unit_rate,mobilization_amount,demobilization_amount,pricing_status,valid_until,evidence_ref").eq("project_id", pid).eq("site_id", siteId).order("equipment_name"),
     db.from("drying_yard_site_labor_costs").select("id,labor_code,labor_name,qty,unit,unit_rate,pricing_status,valid_until,evidence_ref").eq("project_id", pid).eq("site_id", siteId).order("labor_name"),
-    db.from("drying_yard_supplier_directory").select("id,material_group,supplier_name,plant_location,commercial_status,procurement_zone_code").eq("project_id", pid).order("material_group").order("priority_rank"),
+    db.from("drying_yard_supplier_directory").select("id,material_group,supplier_name,plant_location,commercial_status,procurement_zone_code,service_provinces").eq("project_id", pid).order("material_group").order("priority_rank"),
   ]);
-  for (const r of [summary, materials, freight, equipment, labor, suppliers]) if (r.error) throw r.error;
+  for (const r of [summary, dynamicGm, materials, freight, equipment, labor, suppliers]) if (r.error) throw r.error;
   if (!summary.data) return json({ error: "SITE_NOT_FOUND" }, 404);
-  return json({ ok: true, summary: summary.data, materials: materials.data || [], freight: freight.data || [], equipment: equipment.data || [], labor: labor.data || [], suppliers: suppliers.data || [] });
+  const province = summary.data.province;
+  const siteSuppliers = (suppliers.data || []).filter((s: any) => !Array.isArray(s.service_provinces) || s.service_provinces.length === 0 || s.service_provinces.includes(province));
+  return json({ ok: true, summary: summary.data, dynamic_gm: dynamicGm.data || null, materials: materials.data || [], freight: freight.data || [], equipment: equipment.data || [], labor: labor.data || [], suppliers: siteSuppliers });
+}
+
+async function sensitivity(db: any, pid: string, body: Record<string, unknown>) {
+  const scopeName = String(body.scope_name || "").trim();
+  let query = db.from("drying_yard_gm_sensitivity_v")
+    .select("scope_type,scope_name,source_ref,source_date,gm,implied_cost_pre_vat,selling_price_pre_vat,selling_price_vat,gross_profit_pre_vat,cost_overrun_buffer_pct_of_cost,break_even_overrun_amount,modeled_advance_cash_vat,modeled_safety_reserve,modeled_funding_gap_days,evidence_status")
+    .eq("project_id", pid).order("scope_type").order("scope_name").order("gm");
+  if (scopeName) query = query.eq("scope_name", scopeName);
+  const { data, error } = await query;
+  if (error) throw error;
+  return json({ ok: true, scenarios: data || [], rule: "Scenario values use implied cost derived from the current customer quote and the current 32% system target. They are decision support only and never replace confirmed site cost evidence." });
 }
 
 async function applyMaterialQuote(db: any, pid: string, body: Record<string, unknown>) {
@@ -109,6 +131,7 @@ Deno.serve(async (req: Request) => {
     if (!access) return json({ error: "INVALID_ACCESS_CODE" }, 401);
     if (action === "overview") return await overview(db, access.project_id, access.label);
     if (action === "site_detail") return await siteDetail(db, access.project_id, body);
+    if (action === "gm_sensitivity") return await sensitivity(db, access.project_id, body);
     if (action === "apply_material_quote") return await applyMaterialQuote(db, access.project_id, body);
     if (action === "apply_rate_batch") return await applyRateBatch(db, access.project_id, body);
     return json({ error: "UNKNOWN_ACTION" }, 400);
